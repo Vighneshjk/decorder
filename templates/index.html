@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CipherX — A1Z26 Number Cipher</title>
+  <meta name="description" content="Encode and decode secret messages using the A1Z26 number cipher. A=1, B=2 ... Z=26. Convert text to numbers and back with ease." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+
+  <div class="app-wrapper">
+
+    <!-- ── Header ── -->
+    <header class="header">
+      <div class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="40" height="40" rx="12" fill="#5b6af0" />
+          <text x="24" y="32" text-anchor="middle" font-family="Outfit" font-weight="700" font-size="20" fill="white">AZ</text>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>CipherX</h1>
+        <span class="subtitle">A1Z26 Secret Number Cipher</span>
+      </div>
+    </header>
+
+    <!-- ── Main Card ── -->
+    <main class="main-card" role="main">
+
+      <!-- Mode Toggle -->
+      <div class="mode-toggle" role="group" aria-label="Cipher mode">
+        <button id="btn-decode" class="mode-btn active" onclick="setMode('decode')" aria-pressed="true">
+          <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"/></svg>
+          Decode
+        </button>
+        <button id="btn-encode" class="mode-btn" onclick="setMode('encode')" aria-pressed="false">
+          <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+          Encode
+        </button>
+      </div>
+
+      <!-- Mode Description -->
+      <p class="mode-desc" id="mode-desc">Convert plain text into secret number codes.</p>
+
+      <!-- Input Section -->
+      <div class="field-group">
+        <label for="input-text" id="input-label" class="field-label">Your Message</label>
+        <div class="textarea-wrapper">
+          <textarea
+            id="input-text"
+            class="input-area"
+            placeholder="Type your message here…"
+            rows="4"
+            spellcheck="false"
+            autocomplete="off"
+          ></textarea>
+          <span class="char-count" id="char-count">0 chars</span>
+        </div>
+      </div>
+
+      <!-- Convert Button -->
+      <button id="convert-btn" class="convert-btn" onclick="convert()">
+        <span id="btn-label">Encode Message</span>
+        <svg class="arrow-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+      </button>
+
+      <!-- Output Section -->
+      <div class="output-section" id="output-section" aria-live="polite">
+        <div class="output-header">
+          <label class="field-label">Result</label>
+          <button id="copy-btn" class="copy-btn" onclick="copyOutput()" aria-label="Copy result to clipboard" title="Copy to clipboard">
+            <svg id="copy-icon" class="copy-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/>
+              <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/>
+            </svg>
+            <span id="copy-label">Copy</span>
+          </button>
+        </div>
+        <div class="output-box" id="output-box">
+          <span class="output-placeholder">Your result will appear here…</span>
+        </div>
+        <div id="error-msg" class="error-msg" role="alert" aria-live="assertive"></div>
+      </div>
+
+      <!-- ── Collapsible Reference Table ── -->
+      <div class="ref-toggle-row">
+        <button class="ref-toggle-btn" id="ref-toggle" onclick="toggleRef()" aria-expanded="false" aria-controls="ref-body">
+          <svg class="title-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+          Cipher Reference Table
+          <svg id="ref-chevron" class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+        </button>
+      </div>
+      <div id="ref-body" class="ref-body" hidden>
+        <p class="ref-hint">Click any cell to insert it into the input.</p>
+        <div class="cipher-table" id="cipher-table" role="table" aria-label="A1Z26 cipher reference"></div>
+      </div>
+
+    </main>
+
+
+
+    <!-- ── Examples ── -->
+    <section class="examples-section" aria-labelledby="ex-heading">
+      <h2 id="ex-heading" class="section-title">
+        <svg class="title-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+        Quick Examples
+      </h2>
+      <div class="examples-grid">
+        <div class="example-card" onclick="loadExample('HELLO WORLD','encode')" tabindex="0" role="button" aria-label="Load HELLO WORLD encode example">
+          <span class="ex-label">HELLO WORLD</span>
+          <span class="ex-arrow">→</span>
+          <span class="ex-value mono">8-5-12-12-15 / 23-15-18-12-4</span>
+        </div>
+        <div class="example-card" onclick="loadExample('8-5-12-12-15 / 23-15-18-12-4','decode')" tabindex="0" role="button" aria-label="Load decode example for HELLO WORLD">
+          <span class="ex-value mono">8-5-12-12-15 / 23-15-18-12-4</span>
+          <span class="ex-arrow">→</span>
+          <span class="ex-label">HELLO WORLD</span>
+        </div>
+        <div class="example-card" onclick="loadExample('SECRET','encode')" tabindex="0" role="button" aria-label="Load SECRET encode example">
+          <span class="ex-label">SECRET</span>
+          <span class="ex-arrow">→</span>
+          <span class="ex-value mono">19-5-3-18-5-20</span>
+        </div>
+        <div class="example-card" onclick="loadExample('19-5-3-18-5-20','decode')" tabindex="0" role="button" aria-label="Load decode example for SECRET">
+          <span class="ex-value mono">19-5-3-18-5-20</span>
+          <span class="ex-arrow">→</span>
+          <span class="ex-label">SECRET</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Built with <span class="heart">♥</span> using Flask &amp; Vanilla JS · A1Z26 Cipher
+    </footer>
+
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,581 @@
+/* ═══════════════════════════════════════════
+   CipherX — Moderate Clean Design
+   ═══════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #f4f5f7;
+  --surface:    #ffffff;
+  --surface-2:  #f0f0f5;
+  --border:     #dde0ea;
+  --accent:     #5b6af0;
+  --accent-dk:  #4350d4;
+  --accent-lt:  #eef0fd;
+  --text-1:     #1e1e2e;
+  --text-2:     #4a4a6a;
+  --text-3:     #9090ae;
+  --success:    #22c55e;
+  --error:      #ef4444;
+  --radius:     14px;
+  --radius-sm:  10px;
+  --radius-xs:  6px;
+  --font:       'Outfit', sans-serif;
+  --mono:       'JetBrains Mono', monospace;
+  --shadow:     0 2px 8px rgba(0,0,0,.07), 0 0 0 1px var(--border);
+  --shadow-md:  0 4px 16px rgba(0,0,0,.1);
+  --trans:      0.2s ease;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-1);
+  min-height: 100vh;
+  min-height: 100dvh;          /* dynamic viewport on mobile */
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%; /* prevent iOS font bump */
+  text-size-adjust: 100%;
+}
+
+/* ── Layout ── */
+.app-wrapper {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+  /* safe area for notched phones */
+  padding-left:  max(1.25rem, env(safe-area-inset-left));
+  padding-right: max(1.25rem, env(safe-area-inset-right));
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 2rem;
+}
+
+.logo-icon svg {
+  width: 44px;
+  height: 44px;
+}
+
+.header-text h1 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.subtitle {
+  font-size: 0.82rem;
+  color: var(--text-3);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* ── Main Card ── */
+.main-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.25rem;
+}
+
+/* ── Mode Toggle ── */
+.mode-toggle {
+  display: flex;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  margin-bottom: 1.25rem;
+}
+
+.mode-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--trans);
+  color: var(--text-3);
+  background: transparent;
+  min-height: 44px;           /* touch target */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mode-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(91, 106, 240, 0.3);
+}
+
+.mode-btn:not(.active):hover {
+  background: var(--border);
+  color: var(--text-2);
+}
+
+.btn-icon { width: 14px; height: 14px; }
+
+/* ── Mode Desc ── */
+.mode-desc {
+  font-size: 0.82rem;
+  color: var(--text-3);
+  margin-bottom: 1.25rem;
+  text-align: center;
+  min-height: 1.2em;
+}
+
+/* ── Field ── */
+.field-group { margin-bottom: 1rem; }
+
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.4rem;
+}
+
+.textarea-wrapper { position: relative; }
+
+.input-area {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  font-family: var(--mono);
+  font-size: 1rem;             /* ≥16px prevents iOS auto-zoom */
+  padding: 0.75rem 0.9rem 1.75rem;
+  resize: vertical;
+  min-height: 90px;
+  outline: none;
+  transition: border-color var(--trans), box-shadow var(--trans);
+  -webkit-appearance: none;   /* consistent on iOS */
+}
+
+.input-area::placeholder { color: var(--text-3); }
+
+.input-area:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(91, 106, 240, 0.12);
+}
+
+.char-count {
+  position: absolute;
+  bottom: 0.45rem;
+  right: 0.7rem;
+  font-size: 0.68rem;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+/* ── Convert Button ── */
+.convert-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--trans);
+  margin-bottom: 1.25rem;
+  min-height: 48px;            /* comfortable tap target */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;  /* removes 300ms tap delay */
+}
+
+.convert-btn:hover {
+  background: var(--accent-dk);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(91, 106, 240, 0.3);
+}
+
+.convert-btn:active { transform: translateY(0); }
+
+.arrow-icon { width: 16px; height: 16px; transition: transform var(--trans); }
+.convert-btn:hover .arrow-icon { transform: translateX(3px); }
+
+/* ── Output ── */
+.output-section { animation: fadeUp .25s ease; }
+
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.85rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text-2);
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--trans);
+  min-height: 36px;            /* touch-friendly */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+.copy-btn.copied { background: #f0fdf4; border-color: var(--success); color: var(--success); }
+
+.copy-icon { width: 13px; height: 13px; }
+
+.output-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 0.9rem;
+  min-height: 72px;
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--text-1);
+  word-break: break-all;
+  line-height: 1.7;
+  display: flex;
+  align-items: flex-start;
+}
+
+.output-box.has-result { border-color: var(--accent); background: var(--accent-lt); }
+
+.output-placeholder { color: var(--text-3); font-size: 0.85rem; font-family: var(--font); }
+
+.output-text { animation: fadeUp .2s ease; color: var(--accent-dk); font-weight: 500; }
+
+.error-msg {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--error);
+  min-height: 1.1em;
+}
+
+/* ── Collapsible Reference Toggle ── */
+.ref-toggle-row {
+  margin-top: 1.1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
+.ref-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-2);
+  padding: 0;
+  transition: color var(--trans);
+  width: 100%;
+}
+
+.ref-toggle-btn:hover { color: var(--accent); }
+
+.chevron-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  transition: transform var(--trans);
+  color: var(--text-3);
+}
+
+.ref-toggle-btn[aria-expanded="true"] .chevron-icon {
+  transform: rotate(180deg);
+}
+
+.ref-body {
+  margin-top: 0.9rem;
+  animation: fadeUp .2s ease;
+}
+
+/* ── Sections ── */
+.reference-section,
+.examples-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-1);
+  margin-bottom: 0.4rem;
+}
+
+.title-icon { width: 16px; height: 16px; color: var(--accent); }
+
+.ref-hint { font-size: 0.75rem; color: var(--text-3); margin-bottom: 1rem; }
+
+/* ── Cipher Table ── */
+.cipher-table {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 6px;
+}
+
+.cipher-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.55rem 0.2rem;
+  cursor: pointer;
+  transition: all var(--trans);
+  user-select: none;
+  min-height: 52px;            /* big enough to tap */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.cipher-cell:hover {
+  border-color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.cell-letter { font-size: 0.9rem; font-weight: 700; color: var(--accent); line-height: 1; }
+.cell-sep    { font-size: 0.55rem; color: var(--text-3); margin: 2px 0; }
+.cell-num    { font-size: 0.72rem; font-family: var(--mono); color: var(--text-2); }
+
+/* ── Examples ── */
+.examples-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+@media (max-width: 520px) {
+  .examples-grid { grid-template-columns: 1fr; }
+}
+
+.example-card {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+  transition: all var(--trans);
+  font-size: 0.78rem;
+  overflow: hidden;
+  min-height: 48px;            /* touch target */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.example-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-lt);
+}
+
+.example-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ex-label { color: var(--text-1); font-weight: 600; white-space: nowrap; }
+.ex-arrow { color: var(--accent); font-size: 0.9rem; flex-shrink: 0; }
+.ex-value { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.72rem; }
+.mono { font-family: var(--mono); }
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-3);
+  padding-top: 0.75rem;
+}
+
+.heart { color: #ef4444; }
+
+/* ── Spinner ── */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ══════════════════════════════════════
+   RESPONSIVE — Mobile First
+   ══════════════════════════════════════ */
+
+/* ── Tablet (≤640px) ── */
+@media (max-width: 640px) {
+  .app-wrapper {
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .main-card,
+  .examples-section {
+    padding: 1.25rem 1rem;
+    border-radius: 12px;
+  }
+
+  .header {
+    margin-bottom: 1.25rem;
+  }
+
+  .header-text h1 { font-size: 1.4rem; }
+
+  .logo-icon svg { width: 38px; height: 38px; }
+
+  /* Cipher table — smaller min column on tablet */
+  .cipher-table {
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  }
+
+  .examples-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Mobile (≤480px) ── */
+@media (max-width: 480px) {
+  :root {
+    --radius:    12px;
+    --radius-sm:  9px;
+  }
+
+  .app-wrapper {
+    padding: 1.25rem 0.875rem 3rem;
+  }
+
+  .header {
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+  }
+
+  .logo-icon svg { width: 36px; height: 36px; }
+  .header-text h1 { font-size: 1.3rem; }
+  .subtitle { font-size: 0.75rem; }
+
+  .main-card,
+  .examples-section {
+    padding: 1rem 0.875rem;
+    border-radius: var(--radius);
+  }
+
+  /* Mode toggle — bigger and easier to tap */
+  .mode-btn {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.5rem;
+    gap: 0.3rem;
+  }
+
+  .btn-icon { width: 13px; height: 13px; }
+
+  .mode-desc { font-size: 0.78rem; margin-bottom: 1rem; }
+
+  /* Textarea */
+  .input-area {
+    font-size: 1rem;   /* keep ≥16px to prevent iOS zoom */
+    min-height: 100px;
+    padding: 0.75rem 0.75rem 1.6rem;
+  }
+
+  /* Convert button */
+  .convert-btn {
+    font-size: 0.95rem;
+    padding: 0.9rem 1rem;
+  }
+
+  /* Output */
+  .output-box {
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    min-height: 64px;
+  }
+
+  /* Cipher table — 7 columns on small phones */
+  .cipher-table {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .cipher-cell { min-height: 46px; padding: 0.4rem 0.1rem; }
+  .cell-letter { font-size: 0.82rem; }
+  .cell-num    { font-size: 0.65rem; }
+
+  /* Examples */
+  .example-card {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.76rem;
+  }
+
+  /* Ref toggle */
+  .ref-toggle-btn { font-size: 0.825rem; }
+
+  /* Section titles */
+  .section-title { font-size: 0.875rem; }
+
+  .footer { font-size: 0.7rem; }
+}
+
+/* ── Very small (≤360px) ── */
+@media (max-width: 360px) {
+  .header-text h1 { font-size: 1.15rem; }
+  .mode-btn { font-size: 0.78rem; padding: 0.55rem 0.3rem; }
+
+  .cipher-table {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
