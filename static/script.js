@@ -286,3 +286,32 @@ async function runSHA() {
 // Init
 buildCipherTable();
 setA1Z26Mode('decode');
+
+// ── Dynamic Example Loaders ────────────────
+
+function loadAESExample(text, key, mode) {
+  setAESMode(mode);
+  document.getElementById('input-aes').value = text;
+  document.getElementById('input-aes-key').value = key;
+  runAES();
+}
+
+async function loadRSAExample() {
+  setRSAMode('encrypt');
+  document.getElementById('input-rsa').value = "SECRET MESSAGE";
+  await runRSAGenerate();
+  setTimeout(runRSA, 200); // Give it a tiny delay
+}
+
+function loadSHAExample(text, mode) {
+  setSHAMode(mode);
+  document.getElementById('input-sha').value = text;
+  runSHA();
+}
+
+function loadSHAVerifyExample(text, hash) {
+  setSHAMode('verify');
+  document.getElementById('input-sha').value = text;
+  document.getElementById('input-sha-hash').value = hash;
+  runSHA();
+}
