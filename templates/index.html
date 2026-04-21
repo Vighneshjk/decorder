@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CipherX — Security Suite</title>
-  <meta name="description" content="Cipher and encryption tools including A1Z26, Caesar, Morse, and ROT13." />
+  <meta name="description" content="Cipher and encryption tools including A1Z26, Caesar, Morse, ROT13, Binary, Base64, and Hex." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -13,7 +13,6 @@
 <body>
 
   <div class="app-wrapper">
-
     <!-- ── Header ── -->
     <header class="header">
       <div class="logo-icon" aria-hidden="true">
@@ -30,10 +29,13 @@
 
     <!-- ── Tabs Navigation ── -->
     <nav class="nav-tabs" role="tablist">
-      <button class="nav-tab active" id="tab-btn-a1z26" onclick="switchTab('a1z26')" role="tab" aria-selected="true">A1Z26</button>
-      <button class="nav-tab" id="tab-btn-caesar" onclick="switchTab('caesar')" role="tab" aria-selected="false">Caesar</button>
-      <button class="nav-tab" id="tab-btn-morse" onclick="switchTab('morse')" role="tab" aria-selected="false">Morse</button>
-      <button class="nav-tab" id="tab-btn-rot13" onclick="switchTab('rot13')" role="tab" aria-selected="false">ROT13</button>
+      <button class="nav-tab active" id="tab-btn-a1z26" onclick="switchTab('a1z26')" role="tab">A1Z26</button>
+      <button class="nav-tab" id="tab-btn-caesar" onclick="switchTab('caesar')" role="tab">Caesar</button>
+      <button class="nav-tab" id="tab-btn-morse" onclick="switchTab('morse')" role="tab">Morse</button>
+      <button class="nav-tab" id="tab-btn-rot13" onclick="switchTab('rot13')" role="tab">ROT13</button>
+      <button class="nav-tab" id="tab-btn-binary" onclick="switchTab('binary')" role="tab">Binary</button>
+      <button class="nav-tab" id="tab-btn-base64" onclick="switchTab('base64')" role="tab">Base64</button>
+      <button class="nav-tab" id="tab-btn-hex" onclick="switchTab('hex')" role="tab">Hex</button>
     </nav>
 
     <!-- ── TAB: A1Z26 ── -->
@@ -68,13 +70,10 @@
 
         <div class="ref-toggle-row">
           <button class="ref-toggle-btn" id="ref-toggle" onclick="toggleRef()" aria-expanded="false">
-            <svg class="title-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
             Cipher Reference Table
-            <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
           </button>
         </div>
         <div id="ref-body" class="ref-body" hidden>
-          <p class="ref-hint">Click any cell to insert it into the input.</p>
           <div class="cipher-table" id="cipher-table"></div>
         </div>
       </main>
@@ -100,7 +99,8 @@
         <div class="field-group">
           <label for="input-caesar-text" id="label-caesar-input" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-caesar-text" class="input-area" placeholder="Enter message to encrypt…" rows="3"></textarea>
+            <textarea id="input-caesar-text" class="input-area" placeholder="Enter message to encrypt…" rows="3" oninput="updateInputStats('input-caesar-text', 'count-caesar')"></textarea>
+            <span class="char-count" id="count-caesar">0 chars</span>
           </div>
         </div>
         
@@ -148,7 +148,8 @@
         <div class="field-group">
           <label for="input-morse-text" id="label-morse-input" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-morse-text" class="input-area" placeholder="Enter message…" rows="3"></textarea>
+            <textarea id="input-morse-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-morse-text', 'count-morse')"></textarea>
+            <span class="char-count" id="count-morse">0 chars</span>
           </div>
         </div>
         
@@ -166,10 +167,8 @@
         </div>
         
         <div class="ref-toggle-row">
-          <button class="ref-toggle-btn" id="morse-ref-toggle" onclick="toggleMorseRef()" aria-expanded="false">
-            <svg class="title-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+          <button class="ref-toggle-btn" id="morse-ref-toggle" onclick="toggleMorseRef()">
             Morse Reference Table
-            <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
           </button>
         </div>
         <div id="morse-ref-body" class="ref-body" hidden>
@@ -198,7 +197,8 @@
         <div class="field-group">
           <label for="input-rot13-text" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-rot13-text" class="input-area" placeholder="Enter message…" rows="3"></textarea>
+            <textarea id="input-rot13-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-rot13-text', 'count-rot13')"></textarea>
+            <span class="char-count" id="count-rot13">0 chars</span>
           </div>
         </div>
         
@@ -224,6 +224,143 @@
           </div>
           <div class="example-card" onclick="loadRot13Example('URYYB')">
             <span class="ex-value mono">URYYB</span><span class="ex-arrow">→</span><span class="ex-label">HELLO</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── TAB: BINARY ── -->
+    <div id="tab-content-binary" class="tab-pane" role="tabpanel" hidden>
+      <main class="main-card">
+        <div class="mode-toggle" role="group">
+          <button id="btn-binary-encode" class="mode-btn active" onclick="setBinaryMode('encode')">Encode to Binary</button>
+          <button id="btn-binary-decode" class="mode-btn" onclick="setBinaryMode('decode')">Decode to Text</button>
+        </div>
+        <p class="mode-desc" id="binary-mode-desc">Convert plain text into an 8-bit binary string.</p>
+        
+        <div class="field-group">
+          <label for="input-binary-text" id="label-binary-input" class="field-label">Message</label>
+          <div class="textarea-wrapper">
+            <textarea id="input-binary-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-binary-text', 'count-binary')"></textarea>
+            <span class="char-count" id="count-binary">0 chars</span>
+          </div>
+        </div>
+        
+        <button id="btn-binary-action" class="convert-btn" onclick="runBinary()">
+          <span id="label-binary-action">Convert Message</span>
+        </button>
+
+        <div class="output-section">
+          <div class="output-header">
+            <label class="field-label">Result <span class="time-ms" id="time-binary"></span></label>
+            <button class="copy-btn" onclick="copyOutput('out-binary', this)">Copy</button>
+          </div>
+          <div class="output-box" id="out-binary"><span class="output-placeholder">Result here…</span></div>
+          <div id="err-binary" class="error-msg"></div>
+        </div>
+      </main>
+
+      <section class="examples-section">
+        <h2 class="section-title">Quick Examples</h2>
+        <div class="examples-grid">
+          <div class="example-card" onclick="loadBinaryExample('A', 'encode')">
+            <span class="ex-label">A</span><span class="ex-arrow">→</span><span class="ex-value mono">01000001</span>
+          </div>
+          <div class="example-card" onclick="loadBinaryExample('01001000 01001001', 'decode')">
+            <span class="ex-value mono">0100100...</span><span class="ex-arrow">→</span><span class="ex-label">HI</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── TAB: BASE64 ── -->
+    <div id="tab-content-base64" class="tab-pane" role="tabpanel" hidden>
+      <main class="main-card">
+        <div class="mode-toggle" role="group">
+          <button id="btn-base64-encode" class="mode-btn active" onclick="setBase64Mode('encode')">Encode to Base64</button>
+          <button id="btn-base64-decode" class="mode-btn" onclick="setBase64Mode('decode')">Decode to Text</button>
+        </div>
+        <p class="mode-desc" id="base64-mode-desc">Convert data into Base64 format (padding handled automatically).</p>
+        
+        <div class="field-group">
+          <label for="input-base64-text" id="label-base64-input" class="field-label">Message</label>
+          <div class="textarea-wrapper">
+            <textarea id="input-base64-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-base64-text', 'count-base64')"></textarea>
+            <span class="char-count" id="count-base64">0 chars</span>
+          </div>
+        </div>
+        
+        <button id="btn-base64-action" class="convert-btn" onclick="runBase64()">
+          <span id="label-base64-action">Convert</span>
+        </button>
+
+        <div class="output-section">
+          <div class="output-header">
+            <label class="field-label">Result <span class="time-ms" id="time-base64"></span></label>
+            <button class="copy-btn" onclick="copyOutput('out-base64', this)">Copy</button>
+          </div>
+          <div class="output-box" id="out-base64"><span class="output-placeholder">Result here…</span></div>
+          <div id="err-base64" class="error-msg"></div>
+        </div>
+      </main>
+
+      <section class="examples-section">
+        <h2 class="section-title">Quick Examples</h2>
+        <div class="examples-grid">
+          <div class="example-card" onclick="loadBase64Example('HELLO', 'encode')">
+            <span class="ex-label">HELLO</span><span class="ex-arrow">→</span><span class="ex-value mono">SGVsbG8=</span>
+          </div>
+          <div class="example-card" onclick="loadBase64Example('SGVsbG8=', 'decode')">
+            <span class="ex-value mono">SGVsbG8=</span><span class="ex-arrow">→</span><span class="ex-label">HELLO</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── TAB: HEXADECIMAL ── -->
+    <div id="tab-content-hex" class="tab-pane" role="tabpanel" hidden>
+      <main class="main-card">
+        <div class="mode-toggle" role="group">
+          <button id="btn-hex-encode" class="mode-btn active" onclick="setHexMode('encode')">Encode to Hex</button>
+          <button id="btn-hex-decode" class="mode-btn" onclick="setHexMode('decode')">Decode to Text</button>
+        </div>
+        <p class="mode-desc" id="hex-mode-desc">Convert plain text bytes into Hexadecimal (base16).</p>
+        
+        <div class="field-group">
+          <label for="input-hex-text" id="label-hex-input" class="field-label">Message</label>
+          <div class="textarea-wrapper">
+            <textarea id="input-hex-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-hex-text', 'count-hex')"></textarea>
+            <span class="char-count" id="count-hex">0 chars</span>
+          </div>
+        </div>
+
+        <div class="field-group" id="hex-format-group" style="display:flex; gap:1rem;">
+           <label class="field-label"><input type="radio" name="hex_case" value="upper" checked> Uppercase</label>
+           <label class="field-label"><input type="radio" name="hex_case" value="lower"> Lowercase</label>
+        </div>
+        
+        <button id="btn-hex-action" class="convert-btn" onclick="runHex()">
+          <span id="label-hex-action">Convert Message</span>
+        </button>
+
+        <div class="output-section">
+          <div class="output-header">
+            <label class="field-label">Result <span class="time-ms" id="time-hex"></span></label>
+            <button class="copy-btn" onclick="copyOutput('out-hex', this)">Copy</button>
+          </div>
+          <div class="output-box" id="out-hex"><span class="output-placeholder">Result here…</span></div>
+          <div id="err-hex" class="error-msg"></div>
+        </div>
+      </main>
+
+      <section class="examples-section">
+        <h2 class="section-title">Quick Examples</h2>
+        <div class="examples-grid">
+          <div class="example-card" onclick="loadHexExample('HELLO', 'encode')">
+            <span class="ex-label">HELLO</span><span class="ex-arrow">→</span><span class="ex-value mono">48 65 6C 6C 6F</span>
+          </div>
+          <div class="example-card" onclick="loadHexExample('48 65 6C 6C 6F', 'decode')">
+            <span class="ex-value mono">48 65 6C...</span><span class="ex-arrow">→</span><span class="ex-label">HELLO</span>
           </div>
         </div>
       </section>

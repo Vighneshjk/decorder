@@ -30,7 +30,9 @@ function showResult(boxId, text, timeMs) {
   box.classList.add('has-result');
   box.nextElementSibling.textContent = '';
   if (timeMs !== undefined) {
-    document.getElementById(boxId.replace('out-', 'time-')).textContent = `(${timeMs}ms)`;
+    const charCount = text.length;
+    const byteCount = new Blob([text]).size;
+    document.getElementById(boxId.replace('out-', 'time-')).textContent = `(${charCount} chars | ${byteCount} bytes | ${timeMs}ms)`;
   }
 }
 
@@ -57,15 +59,6 @@ async function copyOutput(boxId, btn) {
   } catch (err) { }
 }
 
-async function copyInput(inputId, btn) {
-  const input = document.getElementById(inputId);
-  if (!input.value) return;
-  try {
-    await navigator.clipboard.writeText(input.value);
-    showCopyFeedback(btn);
-  } catch (err) { }
-}
-
 function showCopyFeedback(btn) {
   const oldText = btn.textContent;
   btn.textContent = 'Copied!';
@@ -75,6 +68,12 @@ function showCopyFeedback(btn) {
     btn.classList.remove('copied');
   }, 2000);
 }
+
+function updateInputStats(inputId, countId) {
+  const val = document.getElementById(inputId).value;
+  document.getElementById(countId).textContent = `${val.length} chars`;
+}
+
 
 // ── A1Z26 Cipher Logic ────────────────────
 let a1z26Mode = 'decode';
@@ -95,14 +94,10 @@ function setA1Z26Mode(mode) {
     document.getElementById('label-a1z26-action').textContent = 'Decode Cipher';
   }
   clearOutputBox(document.getElementById('out-a1z26'));
-  updateA1Z26Count();
+  updateInputStats('input-a1z26', 'count-a1z26');
 }
 
-function updateA1Z26Count() {
-  const len = document.getElementById('input-a1z26').value.length;
-  document.getElementById('count-a1z26').textContent = `${len} chars`;
-}
-document.getElementById('input-a1z26').addEventListener('input', updateA1Z26Count);
+document.getElementById('input-a1z26').addEventListener('input', () => updateInputStats('input-a1z26', 'count-a1z26'));
 
 async function runA1Z26() {
   const raw = document.getElementById('input-a1z26').value.trim();
@@ -121,7 +116,7 @@ async function runA1Z26() {
 function loadA1Z26Example(text, mode) {
   setA1Z26Mode(mode);
   document.getElementById('input-a1z26').value = text;
-  updateA1Z26Count();
+  updateInputStats('input-a1z26', 'count-a1z26');
   runA1Z26();
 }
 
@@ -136,7 +131,7 @@ function buildCipherTable() {
     cell.addEventListener('click', () => {
       const inp = document.getElementById('input-a1z26');
       inp.value += a1z26Mode === 'encode' ? letter : (inp.value ? `-${num}` : `${num}`);
-      updateA1Z26Count();
+      updateInputStats('input-a1z26', 'count-a1z26');
     });
     table.appendChild(cell);
   }
@@ -147,6 +142,7 @@ function toggleRef() {
   body.hidden = !body.hidden;
   btn.setAttribute('aria-expanded', !body.hidden);
 }
+
 
 // ── CAESAR CIPHER ─────────────────────────
 let caesarMode = 'encode';
@@ -191,6 +187,7 @@ function loadCaesarExample(text, shift, mode) {
   setCaesarMode(mode);
   document.getElementById('input-caesar-text').value = text;
   document.getElementById('input-caesar-shift').value = shift;
+  updateInputStats('input-caesar-text', 'count-caesar');
   runCaesar();
 }
 
@@ -233,6 +230,7 @@ async function runMorse() {
 function loadMorseExample(text, mode) {
   setMorseMode(mode);
   document.getElementById('input-morse-text').value = text;
+  updateInputStats('input-morse-text', 'count-morse');
   runMorse();
 }
 
@@ -259,6 +257,7 @@ function buildMorseTable() {
     cell.addEventListener('click', () => {
       const inp = document.getElementById('input-morse-text');
       inp.value += morseMode === 'encode' ? letter : (inp.value ? ` ${num}` : `${num}`);
+      updateInputStats('input-morse-text', 'count-morse');
     });
     table.appendChild(cell);
   }
@@ -278,13 +277,149 @@ async function runRot13() {
 
 function loadRot13Example(text) {
   document.getElementById('input-rot13-text').value = text;
+  updateInputStats('input-rot13-text', 'count-rot13');
   runRot13();
 }
 
 
-// Init
+// ── BINARY ─────────────────────────────────
+let binaryMode = 'encode';
+function setBinaryMode(mode) {
+  binaryMode = mode;
+  document.getElementById('btn-binary-encode').classList.toggle('active', mode === 'encode');
+  document.getElementById('btn-binary-decode').classList.toggle('active', mode === 'decode');
+  
+  if (mode === 'encode') {
+    document.getElementById('binary-mode-desc').textContent = 'Convert plain text into an 8-bit binary string.';
+    document.getElementById('label-binary-input').textContent = 'Your Message';
+    document.getElementById('input-binary-text').placeholder = 'Enter message…';
+    document.getElementById('label-binary-action').textContent = 'Encode to Binary';
+  } else {
+    document.getElementById('binary-mode-desc').textContent = 'Decode a binary string back into readable text.';
+    document.getElementById('label-binary-input').textContent = 'Binary Input';
+    document.getElementById('input-binary-text').placeholder = 'Enter 0s and 1s…';
+    document.getElementById('label-binary-action').textContent = 'Decode from Binary';
+  }
+  clearOutputBox(document.getElementById('out-binary'));
+}
+
+async function runBinary() {
+  const raw = document.getElementById('input-binary-text').value.trim();
+  if (!raw) return showError('out-binary', 'Please enter something first.');
+  const endpoint = binaryMode === 'encode' ? '/binary/encode' : '/binary/decode';
+  const body = binaryMode === 'encode' ? { text: raw } : { cipher: raw };
+  
+  try {
+    const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) showError('out-binary', data.error);
+    else showResult('out-binary', data.result, data.time_ms);
+  } catch { showError('out-binary', 'Network error.'); }
+}
+
+function loadBinaryExample(text, mode) {
+  setBinaryMode(mode);
+  document.getElementById('input-binary-text').value = text;
+  updateInputStats('input-binary-text', 'count-binary');
+  runBinary();
+}
+
+// ── BASE64 ─────────────────────────────────
+let base64Mode = 'encode';
+function setBase64Mode(mode) {
+  base64Mode = mode;
+  document.getElementById('btn-base64-encode').classList.toggle('active', mode === 'encode');
+  document.getElementById('btn-base64-decode').classList.toggle('active', mode === 'decode');
+  
+  if (mode === 'encode') {
+    document.getElementById('base64-mode-desc').textContent = 'Convert data into Base64 format (padding handled automatically).';
+    document.getElementById('label-base64-input').textContent = 'Your Message';
+    document.getElementById('input-base64-text').placeholder = 'Enter message…';
+    document.getElementById('label-base64-action').textContent = 'Encode to Base64';
+  } else {
+    document.getElementById('base64-mode-desc').textContent = 'Decode Base64 string back into readable text.';
+    document.getElementById('label-base64-input').textContent = 'Base64 Input';
+    document.getElementById('input-base64-text').placeholder = 'Enter Base64 text…';
+    document.getElementById('label-base64-action').textContent = 'Decode from Base64';
+  }
+  clearOutputBox(document.getElementById('out-base64'));
+}
+
+async function runBase64() {
+  const raw = document.getElementById('input-base64-text').value.trim();
+  if (!raw) return showError('out-base64', 'Please enter something first.');
+  const endpoint = base64Mode === 'encode' ? '/base64/encode' : '/base64/decode';
+  const body = base64Mode === 'encode' ? { text: raw } : { cipher: raw };
+  
+  try {
+    const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) showError('out-base64', data.error);
+    else showResult('out-base64', data.result, data.time_ms);
+  } catch { showError('out-base64', 'Network error.'); }
+}
+
+function loadBase64Example(text, mode) {
+  setBase64Mode(mode);
+  document.getElementById('input-base64-text').value = text;
+  updateInputStats('input-base64-text', 'count-base64');
+  runBase64();
+}
+
+// ── HEXADECIMAL ────────────────────────────
+let hexMode = 'encode';
+function setHexMode(mode) {
+  hexMode = mode;
+  document.getElementById('btn-hex-encode').classList.toggle('active', mode === 'encode');
+  document.getElementById('btn-hex-decode').classList.toggle('active', mode === 'decode');
+  
+  if (mode === 'encode') {
+    document.getElementById('hex-mode-desc').textContent = 'Convert plain text bytes into Hexadecimal (base16).';
+    document.getElementById('label-hex-input').textContent = 'Your Message';
+    document.getElementById('input-hex-text').placeholder = 'Enter message…';
+    document.getElementById('hex-format-group').style.display = 'flex';
+    document.getElementById('label-hex-action').textContent = 'Encode to Hex';
+  } else {
+    document.getElementById('hex-mode-desc').textContent = 'Decode hexadecimal bytes back into readable text.';
+    document.getElementById('label-hex-input').textContent = 'Hexadecimal Input';
+    document.getElementById('input-hex-text').placeholder = 'Enter hex (e.g. 48 65 6C...)';
+    document.getElementById('hex-format-group').style.display = 'none';
+    document.getElementById('label-hex-action').textContent = 'Decode from Hex';
+  }
+  clearOutputBox(document.getElementById('out-hex'));
+}
+
+async function runHex() {
+  const raw = document.getElementById('input-hex-text').value.trim();
+  if (!raw) return showError('out-hex', 'Please enter something first.');
+  const endpoint = hexMode === 'encode' ? '/hex/encode' : '/hex/decode';
+  const isUpper = document.querySelector('input[name="hex_case"]:checked').value === 'upper';
+  const body = hexMode === 'encode' ? { text: raw, upper: isUpper } : { cipher: raw };
+  
+  try {
+    const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) showError('out-hex', data.error);
+    else showResult('out-hex', data.result, data.time_ms);
+  } catch { showError('out-hex', 'Network error.'); }
+}
+
+function loadHexExample(text, mode) {
+  setHexMode(mode);
+  document.getElementById('input-hex-text').value = text;
+  updateInputStats('input-hex-text', 'count-hex');
+  runHex();
+}
+
+
+// Init Everything
 buildCipherTable();
+buildMorseTable();
+
+// Initialize modes
 setA1Z26Mode('decode');
 setCaesarMode('encode');
 setMorseMode('encode');
-buildMorseTable();
+setBinaryMode('encode');
+setBase64Mode('encode');
+setHexMode('encode');

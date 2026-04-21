@@ -1,4 +1,5 @@
 import time
+import base64
 from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
@@ -12,7 +13,7 @@ def measure_time(func):
         return result, ms
     return wrapper
 
-# A1Z26
+# --- A1Z26 ---
 ENCODE_MAP = {chr(65 + i): str(i + 1) for i in range(26)}
 DECODE_MAP = {str(i + 1): chr(65 + i) for i in range(26)}
 
@@ -48,8 +49,7 @@ def decode_text_a1z26(cipher: str) -> str:
             decoded_words.append("".join(decoded_letters))
     return " ".join(decoded_words)
 
-
-# CAESAR CIPHER
+# --- CAESAR CIPHER ---
 @measure_time
 def caesar_encrypt(text: str, shift: int) -> str:
     res = []
@@ -66,7 +66,7 @@ def caesar_decrypt(text: str, shift: int) -> str:
     return caesar_encrypt.__wrapped__(text, -shift)
 
 
-# MORSE CODE
+# --- MORSE CODE ---
 MORSE_DICT = { 'A':'.-', 'B':'-...', 'C':'-.-.', 'D':'-..', 'E':'.', 'F':'..-.', 'G':'--.', 'H':'....', 'I':'..', 'J':'.---', 'K':'-.-', 'L':'.-..', 'M':'--', 'N':'-.', 'O':'---', 'P':'.--.', 'Q':'--.-', 'R':'.-.', 'S':'...', 'T':'-', 'U':'..-', 'V':'...-', 'W':'.--', 'X':'-..-', 'Y':'-.--', 'Z':'--..', '1':'.----', '2':'..---', '3':'...--', '4':'....-', '5':'.....', '6':'-....', '7':'--...', '8':'---..', '9':'----.', '0':'-----', ',':'--..--', '.':'.-.-.-', '?':'..--..', '-':'-....-', '(':'-.--.', ')':'-.--.-'}
 MORSE_DECODE_DICT = {v: k for k, v in MORSE_DICT.items()}
 
@@ -99,12 +99,57 @@ def morse_decode(cipher: str) -> str:
             decoded_words.append("".join(dec_chars))
     return " ".join(decoded_words)
 
-
-# ROT13
+# --- ROT13 ---
 @measure_time
 def rot13_convert(text: str) -> str:
     return caesar_encrypt.__wrapped__(text, 13)
 
+# --- BINARY ---
+@measure_time
+def binary_encode(text: str) -> str:
+    return " ".join(format(b, '08b') for b in text.encode('utf-8'))
+
+@measure_time
+def binary_decode(binary_str: str) -> str:
+    parts = binary_str.replace(" ", "").strip()
+    if not parts or not all(c in "01" for c in parts) or len(parts) % 8 != 0:
+        return None
+    try:
+        byte_array = bytearray(int(parts[i:i+8], 2) for i in range(0, len(parts), 8))
+        return byte_array.decode('utf-8')
+    except Exception:
+        return None
+
+# --- BASE64 ---
+@measure_time
+def base64_encode(text: str) -> str:
+    return base64.b64encode(text.encode('utf-8')).decode('utf-8')
+
+@measure_time
+def base64_decode(b64_str: str) -> str:
+    try:
+        b64_str = b64_str.strip()
+        pad = len(b64_str) % 4
+        if pad == 1: return None
+        if pad > 0: b64_str += "=" * (4 - pad)
+        return base64.b64decode(b64_str).decode('utf-8')
+    except Exception:
+        return None
+
+# --- HEXADECIMAL ---
+@measure_time
+def hex_encode(text: str, upper: bool = True) -> str:
+    hex_str = text.encode('utf-8').hex()
+    formatted = " ".join(hex_str[i:i+2] for i in range(0, len(hex_str), 2))
+    return formatted.upper() if upper else formatted.lower()
+
+@measure_time
+def hex_decode(hex_str: str) -> str:
+    clean_hex = hex_str.replace(" ", "").strip()
+    try:
+        return bytes.fromhex(clean_hex).decode('utf-8')
+    except Exception:
+        return None
 
 # --- ROUTES ---
 @app.route("/")
@@ -154,6 +199,40 @@ def api_morse_dec():
 @app.route("/rot13/convert", methods=["POST"])
 def api_rot13():
     res, ms = rot13_convert(request.json.get("text", ""))
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/binary/encode", methods=["POST"])
+def api_binary_enc():
+    res, ms = binary_encode(request.json.get("text", ""))
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/binary/decode", methods=["POST"])
+def api_binary_dec():
+    res, ms = binary_decode(request.json.get("cipher", ""))
+    if res is None: return jsonify({"error": "Invalid binary format. Must only contain 0 and 1, and be a multiple of 8 bits."}), 400
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/base64/encode", methods=["POST"])
+def api_base64_enc():
+    res, ms = base64_encode(request.json.get("text", ""))
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/base64/decode", methods=["POST"])
+def api_base64_dec():
+    res, ms = base64_decode(request.json.get("cipher", ""))
+    if res is None: return jsonify({"error": "Invalid Base64 format."}), 400
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/hex/encode", methods=["POST"])
+def api_hex_enc():
+    upper = request.json.get("upper", True)
+    res, ms = hex_encode(request.json.get("text", ""), upper)
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/hex/decode", methods=["POST"])
+def api_hex_dec():
+    res, ms = hex_decode(request.json.get("cipher", ""))
+    if res is None: return jsonify({"error": "Invalid hexadecimal format."}), 400
     return jsonify({"result": res, "time_ms": round(ms, 2)})
 
 if __name__ == "__main__":
