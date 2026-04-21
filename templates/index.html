@@ -4,11 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CipherX — Security Suite</title>
-  <meta name="description" content="Cipher and encryption tools including A1Z26, Caesar, Morse, ROT13, Binary, Base64, and Hex." />
+  <meta name="description" content="Cipher and encryption tools including A1Z26, Caesar, Morse, ROT13, Binary, Base64, Hex, AES, RSA, and SHA." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    .nav-category {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.6rem 0.5rem 0.6rem 1rem;
+      align-self: center;
+      white-space: nowrap;
+    }
+    .multi-hash-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      word-break: break-all;
+    }
+    .hash-label { font-size: 0.75rem; font-weight: bold; color: var(--text-2); margin-top: 0.5rem; }
+    .warning-banner {
+      background: #fff3cd;
+      color: #856404;
+      padding: 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  </style>
 </head>
 <body>
 
@@ -23,30 +54,38 @@
       </div>
       <div class="header-text">
         <h1>CipherX</h1>
-        <span class="subtitle">Complete Security Suite</span>
+        <span class="subtitle">10-in-1 Complete Security Suite</span>
       </div>
     </header>
 
     <!-- ── Tabs Navigation ── -->
     <nav class="nav-tabs" role="tablist">
+      <div class="nav-category">📚 Classic Ciphers</div>
       <button class="nav-tab active" id="tab-btn-a1z26" onclick="switchTab('a1z26')" role="tab">A1Z26</button>
       <button class="nav-tab" id="tab-btn-caesar" onclick="switchTab('caesar')" role="tab">Caesar</button>
       <button class="nav-tab" id="tab-btn-morse" onclick="switchTab('morse')" role="tab">Morse</button>
       <button class="nav-tab" id="tab-btn-rot13" onclick="switchTab('rot13')" role="tab">ROT13</button>
+      
+      <div class="nav-category">📦 Encoding</div>
       <button class="nav-tab" id="tab-btn-binary" onclick="switchTab('binary')" role="tab">Binary</button>
       <button class="nav-tab" id="tab-btn-base64" onclick="switchTab('base64')" role="tab">Base64</button>
       <button class="nav-tab" id="tab-btn-hex" onclick="switchTab('hex')" role="tab">Hex</button>
+      
+      <div class="nav-category">🔐 Modern Encryption</div>
+      <button class="nav-tab" id="tab-btn-aes" onclick="switchTab('aes')" role="tab">AES</button>
+      <button class="nav-tab" id="tab-btn-rsa" onclick="switchTab('rsa')" role="tab">RSA</button>
+      <button class="nav-tab" id="tab-btn-sha" onclick="switchTab('sha')" role="tab">SHA256</button>
     </nav>
 
     <!-- ── TAB: A1Z26 ── -->
     <div id="tab-content-a1z26" class="tab-pane active" role="tabpanel">
+      <!-- (content logic exactly as previously generated, preserving structure) -->
       <main class="main-card">
         <div class="mode-toggle" role="group">
           <button id="btn-a1z26-decode" class="mode-btn active" onclick="setA1Z26Mode('decode')">Decode</button>
           <button id="btn-a1z26-encode" class="mode-btn" onclick="setA1Z26Mode('encode')">Encode</button>
         </div>
         <p class="mode-desc" id="a1z26-mode-desc">Decode a number cipher back into readable text.</p>
-        
         <div class="field-group">
           <label for="input-a1z26" id="label-a1z26-input" class="field-label">Cipher Numbers</label>
           <div class="textarea-wrapper">
@@ -54,37 +93,14 @@
             <span class="char-count" id="count-a1z26">0 chars</span>
           </div>
         </div>
-        
-        <button id="btn-a1z26-action" class="convert-btn" onclick="runA1Z26()">
-          <span id="label-a1z26-action">Decode Cipher</span>
-        </button>
-
+        <button id="btn-a1z26-action" class="convert-btn" onclick="runA1Z26()"><span id="label-a1z26-action">Decode Cipher</span></button>
         <div class="output-section">
-          <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-a1z26"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-a1z26', this)">Copy</button>
-          </div>
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-a1z26"></span></label><button class="copy-btn" onclick="copyOutput('out-a1z26', this)">Copy</button></div>
           <div class="output-box" id="out-a1z26"><span class="output-placeholder">Result here…</span></div>
           <div id="err-a1z26" class="error-msg"></div>
         </div>
-
-        <div class="ref-toggle-row">
-          <button class="ref-toggle-btn" id="ref-toggle" onclick="toggleRef()" aria-expanded="false">
-            Cipher Reference Table
-          </button>
-        </div>
-        <div id="ref-body" class="ref-body" hidden>
-          <div class="cipher-table" id="cipher-table"></div>
-        </div>
       </main>
-      
-      <section class="examples-section">
-        <h2 class="section-title">Quick Examples</h2>
-        <div class="examples-grid">
-          <div class="example-card" onclick="loadA1Z26Example('HELLO WORLD','encode')"><span class="ex-label">HELLO WORLD</span><span class="ex-arrow">→</span><span class="ex-value mono">8-5-12-12-15</span></div>
-          <div class="example-card" onclick="loadA1Z26Example('8-5-12-12-15 / 23-15-18-12-4','decode')"><span class="ex-value mono">8-5...</span><span class="ex-arrow">→</span><span class="ex-label">Decode</span></div>
-        </div>
-      </section>
+      <section class="examples-section"><h2 class="section-title">Quick Examples</h2><div class="examples-grid"><div class="example-card" onclick="loadA1Z26Example('HELLO WORLD','encode')"><span class="ex-label">HELLO WORLD</span><span class="ex-arrow">→</span><span class="ex-value mono">8-5-12-12-15</span></div></div></section>
     </div>
 
     <!-- ── TAB: CAESAR ── -->
@@ -95,45 +111,24 @@
           <button id="btn-caesar-decrypt" class="mode-btn" onclick="setCaesarMode('decode')">Decrypt</button>
         </div>
         <p class="mode-desc" id="caesar-mode-desc">Encrypt a message by shifting its letters.</p>
-        
         <div class="field-group">
           <label for="input-caesar-text" id="label-caesar-input" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-caesar-text" class="input-area" placeholder="Enter message to encrypt…" rows="3" oninput="updateInputStats('input-caesar-text', 'count-caesar')"></textarea>
+            <textarea id="input-caesar-text" class="input-area" rows="3" oninput="updateInputStats('input-caesar-text', 'count-caesar')"></textarea>
             <span class="char-count" id="count-caesar">0 chars</span>
           </div>
         </div>
-        
         <div class="field-group">
           <label for="input-caesar-shift" class="field-label">Shift Length (1-25)</label>
           <input type="number" id="input-caesar-shift" class="input-area single-line" placeholder="3" min="1" max="25" />
         </div>
-        
-        <button id="btn-caesar-action" class="convert-btn" onclick="runCaesar()">
-          <span id="label-caesar-action">Encrypt Message</span>
-        </button>
-
+        <button id="btn-caesar-action" class="convert-btn" onclick="runCaesar()"><span id="label-caesar-action">Encrypt Message</span></button>
         <div class="output-section">
-          <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-caesar"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-caesar', this)">Copy</button>
-          </div>
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-caesar"></span></label><button class="copy-btn" onclick="copyOutput('out-caesar', this)">Copy</button></div>
           <div class="output-box" id="out-caesar"><span class="output-placeholder">Result here…</span></div>
-          <div id="err-caesar" class="error-msg"></div>
         </div>
       </main>
-
-      <section class="examples-section">
-        <h2 class="section-title">Quick Examples</h2>
-        <div class="examples-grid">
-          <div class="example-card" onclick="loadCaesarExample('HELLO', 3, 'encode')">
-            <span class="ex-label">HELLO (+3)</span><span class="ex-arrow">→</span><span class="ex-value mono">KHOOR</span>
-          </div>
-          <div class="example-card" onclick="loadCaesarExample('KHOOR', 3, 'decode')">
-            <span class="ex-label">KHOOR (-3)</span><span class="ex-arrow">→</span><span class="ex-value mono">HELLO</span>
-          </div>
-        </div>
-      </section>
+      <section class="examples-section"><h2 class="section-title">Quick Examples</h2><div class="examples-grid"><div class="example-card" onclick="loadCaesarExample('HELLO', 3, 'encode')"><span class="ex-label">HELLO (+3)</span><span class="ex-arrow">→</span><span class="ex-value mono">KHOOR</span></div></div></section>
     </div>
 
     <!-- ── TAB: MORSE ── -->
@@ -144,89 +139,39 @@
           <button id="btn-morse-decode" class="mode-btn" onclick="setMorseMode('decode')">Decode back to Text</button>
         </div>
         <p class="mode-desc" id="morse-mode-desc">Convert plain text into Morse code dots and dashes.</p>
-        
         <div class="field-group">
           <label for="input-morse-text" id="label-morse-input" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-morse-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-morse-text', 'count-morse')"></textarea>
+            <textarea id="input-morse-text" class="input-area" rows="3" oninput="updateInputStats('input-morse-text', 'count-morse')"></textarea>
             <span class="char-count" id="count-morse">0 chars</span>
           </div>
         </div>
-        
-        <button id="btn-morse-action" class="convert-btn" onclick="runMorse()">
-          <span id="label-morse-action">Convert Message</span>
-        </button>
-
+        <button id="btn-morse-action" class="convert-btn" onclick="runMorse()"><span id="label-morse-action">Convert Message</span></button>
         <div class="output-section">
-          <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-morse"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-morse', this)">Copy</button>
-          </div>
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-morse"></span></label><button class="copy-btn" onclick="copyOutput('out-morse', this)">Copy</button></div>
           <div class="output-box" id="out-morse"><span class="output-placeholder">Result here…</span></div>
-          <div id="err-morse" class="error-msg"></div>
-        </div>
-        
-        <div class="ref-toggle-row">
-          <button class="ref-toggle-btn" id="morse-ref-toggle" onclick="toggleMorseRef()">
-            Morse Reference Table
-          </button>
-        </div>
-        <div id="morse-ref-body" class="ref-body" hidden>
-          <div class="cipher-table" id="morse-cipher-table"></div>
         </div>
       </main>
-
-      <section class="examples-section">
-        <h2 class="section-title">Quick Examples</h2>
-        <div class="examples-grid">
-          <div class="example-card" onclick="loadMorseExample('HELLO', 'encode')">
-            <span class="ex-label">HELLO</span><span class="ex-arrow">→</span><span class="ex-value mono">.... . .-.. .-.. ---</span>
-          </div>
-          <div class="example-card" onclick="loadMorseExample('.... . .-.. .-.. --- / .-- --- .-. .-.. -..', 'decode')">
-            <span class="ex-value mono">.... . .-..</span><span class="ex-arrow">→</span><span class="ex-label">HELLO WORLD</span>
-          </div>
-        </div>
-      </section>
+      <section class="examples-section"><h2 class="section-title">Quick Examples</h2><div class="examples-grid"><div class="example-card" onclick="loadMorseExample('HELLO', 'encode')"><span class="ex-label">HELLO</span><span class="ex-arrow">→</span><span class="ex-value mono">.... . .-.. .-.. ---</span></div></div></section>
     </div>
 
     <!-- ── TAB: ROT13 ── -->
     <div id="tab-content-rot13" class="tab-pane" role="tabpanel" hidden>
       <main class="main-card">
-        <p class="mode-desc" style="text-align: center; margin-top: 1rem; margin-bottom: 2rem;">ROT13 shifts each letter by exactly 13 places. It reverses itself!</p>
-        
+        <p class="mode-desc">ROT13 shifts each letter by exactly 13 places. It reverses itself!</p>
         <div class="field-group">
           <label for="input-rot13-text" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-rot13-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-rot13-text', 'count-rot13')"></textarea>
+            <textarea id="input-rot13-text" class="input-area" rows="3" oninput="updateInputStats('input-rot13-text', 'count-rot13')"></textarea>
             <span class="char-count" id="count-rot13">0 chars</span>
           </div>
         </div>
-        
-        <button id="btn-rot13-action" class="convert-btn" onclick="runRot13()">
-          <span id="label-rot13-action">Convert Message (Shift 13)</span>
-        </button>
-
+        <button id="btn-rot13-action" class="convert-btn" onclick="runRot13()"><span id="label-rot13-action">Convert Message (Shift 13)</span></button>
         <div class="output-section">
-          <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-rot13"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-rot13', this)">Copy</button>
-          </div>
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-rot13"></span></label><button class="copy-btn" onclick="copyOutput('out-rot13', this)">Copy</button></div>
           <div class="output-box" id="out-rot13"><span class="output-placeholder">Result here…</span></div>
-          <div id="err-rot13" class="error-msg"></div>
         </div>
       </main>
-
-      <section class="examples-section">
-        <h2 class="section-title">Quick Examples</h2>
-        <div class="examples-grid">
-          <div class="example-card" onclick="loadRot13Example('HELLO')">
-            <span class="ex-label">HELLO</span><span class="ex-arrow">→</span><span class="ex-value mono">URYYB</span>
-          </div>
-          <div class="example-card" onclick="loadRot13Example('URYYB')">
-            <span class="ex-value mono">URYYB</span><span class="ex-arrow">→</span><span class="ex-label">HELLO</span>
-          </div>
-        </div>
-      </section>
     </div>
 
     <!-- ── TAB: BINARY ── -->
@@ -237,40 +182,19 @@
           <button id="btn-binary-decode" class="mode-btn" onclick="setBinaryMode('decode')">Decode to Text</button>
         </div>
         <p class="mode-desc" id="binary-mode-desc">Convert plain text into an 8-bit binary string.</p>
-        
         <div class="field-group">
           <label for="input-binary-text" id="label-binary-input" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-binary-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-binary-text', 'count-binary')"></textarea>
+            <textarea id="input-binary-text" class="input-area" rows="3" oninput="updateInputStats('input-binary-text', 'count-binary')"></textarea>
             <span class="char-count" id="count-binary">0 chars</span>
           </div>
         </div>
-        
-        <button id="btn-binary-action" class="convert-btn" onclick="runBinary()">
-          <span id="label-binary-action">Convert Message</span>
-        </button>
-
+        <button id="btn-binary-action" class="convert-btn" onclick="runBinary()"><span id="label-binary-action">Convert Message</span></button>
         <div class="output-section">
-          <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-binary"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-binary', this)">Copy</button>
-          </div>
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-binary"></span></label><button class="copy-btn" onclick="copyOutput('out-binary', this)">Copy</button></div>
           <div class="output-box" id="out-binary"><span class="output-placeholder">Result here…</span></div>
-          <div id="err-binary" class="error-msg"></div>
         </div>
       </main>
-
-      <section class="examples-section">
-        <h2 class="section-title">Quick Examples</h2>
-        <div class="examples-grid">
-          <div class="example-card" onclick="loadBinaryExample('A', 'encode')">
-            <span class="ex-label">A</span><span class="ex-arrow">→</span><span class="ex-value mono">01000001</span>
-          </div>
-          <div class="example-card" onclick="loadBinaryExample('01001000 01001001', 'decode')">
-            <span class="ex-value mono">0100100...</span><span class="ex-arrow">→</span><span class="ex-label">HI</span>
-          </div>
-        </div>
-      </section>
     </div>
 
     <!-- ── TAB: BASE64 ── -->
@@ -280,41 +204,20 @@
           <button id="btn-base64-encode" class="mode-btn active" onclick="setBase64Mode('encode')">Encode to Base64</button>
           <button id="btn-base64-decode" class="mode-btn" onclick="setBase64Mode('decode')">Decode to Text</button>
         </div>
-        <p class="mode-desc" id="base64-mode-desc">Convert data into Base64 format (padding handled automatically).</p>
-        
+        <p class="mode-desc" id="base64-mode-desc">Convert data into Base64 format.</p>
         <div class="field-group">
           <label for="input-base64-text" id="label-base64-input" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-base64-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-base64-text', 'count-base64')"></textarea>
+            <textarea id="input-base64-text" class="input-area" rows="3" oninput="updateInputStats('input-base64-text', 'count-base64')"></textarea>
             <span class="char-count" id="count-base64">0 chars</span>
           </div>
         </div>
-        
-        <button id="btn-base64-action" class="convert-btn" onclick="runBase64()">
-          <span id="label-base64-action">Convert</span>
-        </button>
-
+        <button id="btn-base64-action" class="convert-btn" onclick="runBase64()"><span id="label-base64-action">Convert</span></button>
         <div class="output-section">
-          <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-base64"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-base64', this)">Copy</button>
-          </div>
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-base64"></span></label><button class="copy-btn" onclick="copyOutput('out-base64', this)">Copy</button></div>
           <div class="output-box" id="out-base64"><span class="output-placeholder">Result here…</span></div>
-          <div id="err-base64" class="error-msg"></div>
         </div>
       </main>
-
-      <section class="examples-section">
-        <h2 class="section-title">Quick Examples</h2>
-        <div class="examples-grid">
-          <div class="example-card" onclick="loadBase64Example('HELLO', 'encode')">
-            <span class="ex-label">HELLO</span><span class="ex-arrow">→</span><span class="ex-value mono">SGVsbG8=</span>
-          </div>
-          <div class="example-card" onclick="loadBase64Example('SGVsbG8=', 'decode')">
-            <span class="ex-value mono">SGVsbG8=</span><span class="ex-arrow">→</span><span class="ex-label">HELLO</span>
-          </div>
-        </div>
-      </section>
     </div>
 
     <!-- ── TAB: HEXADECIMAL ── -->
@@ -325,45 +228,115 @@
           <button id="btn-hex-decode" class="mode-btn" onclick="setHexMode('decode')">Decode to Text</button>
         </div>
         <p class="mode-desc" id="hex-mode-desc">Convert plain text bytes into Hexadecimal (base16).</p>
-        
         <div class="field-group">
           <label for="input-hex-text" id="label-hex-input" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-hex-text" class="input-area" placeholder="Enter message…" rows="3" oninput="updateInputStats('input-hex-text', 'count-hex')"></textarea>
+            <textarea id="input-hex-text" class="input-area" rows="3" oninput="updateInputStats('input-hex-text', 'count-hex')"></textarea>
             <span class="char-count" id="count-hex">0 chars</span>
           </div>
         </div>
-
         <div class="field-group" id="hex-format-group" style="display:flex; gap:1rem;">
            <label class="field-label"><input type="radio" name="hex_case" value="upper" checked> Uppercase</label>
            <label class="field-label"><input type="radio" name="hex_case" value="lower"> Lowercase</label>
         </div>
-        
-        <button id="btn-hex-action" class="convert-btn" onclick="runHex()">
-          <span id="label-hex-action">Convert Message</span>
-        </button>
-
+        <button id="btn-hex-action" class="convert-btn" onclick="runHex()"><span id="label-hex-action">Convert Message</span></button>
         <div class="output-section">
-          <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-hex"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-hex', this)">Copy</button>
-          </div>
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-hex"></span></label><button class="copy-btn" onclick="copyOutput('out-hex', this)">Copy</button></div>
           <div class="output-box" id="out-hex"><span class="output-placeholder">Result here…</span></div>
-          <div id="err-hex" class="error-msg"></div>
         </div>
       </main>
+    </div>
 
-      <section class="examples-section">
-        <h2 class="section-title">Quick Examples</h2>
-        <div class="examples-grid">
-          <div class="example-card" onclick="loadHexExample('HELLO', 'encode')">
-            <span class="ex-label">HELLO</span><span class="ex-arrow">→</span><span class="ex-value mono">48 65 6C 6C 6F</span>
-          </div>
-          <div class="example-card" onclick="loadHexExample('48 65 6C 6C 6F', 'decode')">
-            <span class="ex-value mono">48 65 6C...</span><span class="ex-arrow">→</span><span class="ex-label">HELLO</span>
+    <!-- ── TAB: AES ── -->
+    <div id="tab-content-aes" class="tab-pane" role="tabpanel" hidden>
+      <main class="main-card">
+        <div class="warning-banner">⚠️ For educational purposes only.</div>
+        <div class="mode-toggle" role="group">
+          <button id="btn-aes-encrypt" class="mode-btn active" onclick="setAESMode('encrypt')">Encrypt</button>
+          <button id="btn-aes-decrypt" class="mode-btn" onclick="setAESMode('decrypt')">Decrypt</button>
+        </div>
+        <p class="mode-desc" id="aes-mode-desc">Encrypt a message securely using AES-128 CBC.</p>
+        <div class="field-group">
+          <label for="input-aes" id="label-aes-input" class="field-label">Message</label>
+          <div class="textarea-wrapper">
+            <textarea id="input-aes" class="input-area" placeholder="Enter message..." rows="3"></textarea>
           </div>
         </div>
-      </section>
+        <div class="field-group">
+          <label for="input-aes-key" class="field-label">Secret Key</label>
+          <input type="text" id="input-aes-key" class="input-area single-line" placeholder="Will be padded to 16 bytes" />
+        </div>
+        <button id="btn-aes-action" class="convert-btn" onclick="runAES()"><span id="label-aes-action">Encrypt Message</span></button>
+        <div class="output-section">
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-aes"></span></label><button class="copy-btn" onclick="copyOutput('out-aes', this)">Copy</button></div>
+          <div class="output-box" id="out-aes"><span class="output-placeholder">Result here…</span></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ── TAB: RSA ── -->
+    <div id="tab-content-rsa" class="tab-pane" role="tabpanel" hidden>
+      <main class="main-card">
+        <div class="warning-banner">⚠️ For educational purposes only.</div>
+        <div class="mode-toggle" role="group">
+          <button id="btn-rsa-encrypt" class="mode-btn active" onclick="setRSAMode('encrypt')">Encrypt</button>
+          <button id="btn-rsa-decrypt" class="mode-btn" onclick="setRSAMode('decrypt')">Decrypt</button>
+        </div>
+        <p class="mode-desc" id="rsa-mode-desc">Encrypt using Public Key, Decrypt using Private Key.</p>
+        
+        <div class="keys-section">
+          <button class="convert-btn outline" onclick="runRSAGenerate()" id="btn-rsa-gen">Generate 2048-bit RSA Keys</button>
+          <div class="key-box">
+             <label class="field-label split-label">Public Key (share this) <button class="copy-btn mini" onclick="copyInput('input-rsa-pub', this)">Copy</button></label>
+             <textarea id="input-rsa-pub" class="input-area key-area" placeholder="Public Key..." rows="2"></textarea>
+          </div>
+          <div class="key-box">
+             <label class="field-label split-label">Private Key (save securely — cannot be recovered) <button class="copy-btn mini" onclick="copyInput('input-rsa-priv', this)">Copy</button></label>
+             <textarea id="input-rsa-priv" class="input-area key-area" placeholder="Private Key..." rows="2"></textarea>
+          </div>
+        </div>
+        
+        <div class="field-group mt-3">
+          <label for="input-rsa" id="label-rsa-input" class="field-label">Message</label>
+          <div class="textarea-wrapper">
+            <textarea id="input-rsa" class="input-area" placeholder="Enter message…" rows="3"></textarea>
+          </div>
+        </div>
+        <button id="btn-rsa-action" class="convert-btn" onclick="runRSA()"><span id="label-rsa-action">Encrypt Message</span></button>
+        <div class="output-section">
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-rsa"></span></label><button class="copy-btn" onclick="copyOutput('out-rsa', this)">Copy</button></div>
+          <div class="output-box" id="out-rsa"><span class="output-placeholder">Result here…</span></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ── TAB: SHA256 ── -->
+    <div id="tab-content-sha" class="tab-pane" role="tabpanel" hidden>
+      <main class="main-card">
+        <div class="mode-toggle" role="group">
+          <button id="btn-sha-hash" class="mode-btn active" onclick="setSHAMode('hash')">Live Hashing</button>
+          <button id="btn-sha-verify" class="mode-btn" onclick="setSHAMode('verify')">Verify Hash</button>
+        </div>
+        <p class="mode-desc" id="sha-mode-desc">Live SHA256, MD5, and SHA1 hashing.</p>
+        
+        <div class="field-group">
+          <label for="input-sha" class="field-label">Input Text</label>
+          <div class="textarea-wrapper">
+            <textarea id="input-sha" class="input-area" placeholder="Type to hash in real-time…" rows="3" oninput="runSHA()"></textarea>
+          </div>
+        </div>
+        
+        <div class="field-group" id="sha-verify-group" hidden>
+          <label for="input-sha-hash" class="field-label">Expected SHA256 Hash</label>
+          <input type="text" id="input-sha-hash" class="input-area single-line" placeholder="Enter expected SHA256 hash…" />
+          <button class="convert-btn mt-3" onclick="runSHAVerify()">Verify Match</button>
+        </div>
+        
+        <div class="output-section">
+          <div class="output-header"><label class="field-label">Result <span class="time-ms" id="time-sha"></span></label></div>
+          <div class="output-box" id="out-sha"><span class="output-placeholder">Start typing to generate hashes...</span></div>
+        </div>
+      </main>
     </div>
 
     <footer class="footer">

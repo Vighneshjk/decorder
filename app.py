@@ -1,6 +1,11 @@
 import time
 import base64
+import hashlib
 from flask import Flask, request, jsonify, render_template
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 
 app = Flask(__name__)
 
@@ -64,7 +69,6 @@ def caesar_encrypt(text: str, shift: int) -> str:
 @measure_time
 def caesar_decrypt(text: str, shift: int) -> str:
     return caesar_encrypt.__wrapped__(text, -shift)
-
 
 # --- MORSE CODE ---
 MORSE_DICT = { 'A':'.-', 'B':'-...', 'C':'-.-.', 'D':'-..', 'E':'.', 'F':'..-.', 'G':'--.', 'H':'....', 'I':'..', 'J':'.---', 'K':'-.-', 'L':'.-..', 'M':'--', 'N':'-.', 'O':'---', 'P':'.--.', 'Q':'--.-', 'R':'.-.', 'S':'...', 'T':'-', 'U':'..-', 'V':'...-', 'W':'.--', 'X':'-..-', 'Y':'-.--', 'Z':'--..', '1':'.----', '2':'..---', '3':'...--', '4':'....-', '5':'.....', '6':'-....', '7':'--...', '8':'---..', '9':'----.', '0':'-----', ',':'--..--', '.':'.-.-.-', '?':'..--..', '-':'-....-', '(':'-.--.', ')':'-.--.-'}
@@ -151,6 +155,64 @@ def hex_decode(hex_str: str) -> str:
     except Exception:
         return None
 
+# --- AES ---
+@measure_time
+def aes_encrypt(text: str, key: str) -> str:
+    key_bytes = key.encode('utf-8')
+    if len(key_bytes) < 16:
+        key_bytes = key_bytes.ljust(16, b'\0')
+    elif len(key_bytes) > 16:
+        key_bytes = key_bytes[:16]
+    cipher = AES.new(key_bytes, AES.MODE_CBC)
+    ct_bytes = cipher.encrypt(pad(text.encode('utf-8'), AES.block_size))
+    return (cipher.iv + ct_bytes).hex()
+
+@measure_time
+def aes_decrypt(hex_cipher: str, key: str) -> str:
+    key_bytes = key.encode('utf-8')
+    if len(key_bytes) < 16:
+        key_bytes = key_bytes.ljust(16, b'\0')
+    elif len(key_bytes) > 16:
+        key_bytes = key_bytes[:16]
+    try:
+        cipher_bytes = bytes.fromhex(hex_cipher)
+        iv = cipher_bytes[:16]
+        ct = cipher_bytes[16:]
+        cipher = AES.new(key_bytes, AES.MODE_CBC, iv)
+        pt = unpad(cipher.decrypt(ct), AES.block_size)
+        return pt.decode('utf-8')
+    except Exception:
+        return None
+
+# --- RSA ---
+@measure_time
+def rsa_generate_keys():
+    key = RSA.generate(2048)
+    private_key = key.export_key().decode('utf-8')
+    public_key = key.publickey().export_key().decode('utf-8')
+    return private_key, public_key
+
+@measure_time
+def rsa_encrypt(text: str, public_key_str: str) -> str:
+    try:
+        recipient_key = RSA.import_key(public_key_str)
+        cipher_rsa = PKCS1_OAEP.new(recipient_key)
+        enc_data = cipher_rsa.encrypt(text.encode('utf-8'))
+        return enc_data.hex()
+    except Exception:
+        return None
+
+@measure_time
+def rsa_decrypt(hex_cipher: str, private_key_str: str) -> str:
+    try:
+        private_key = RSA.import_key(private_key_str)
+        cipher_rsa = PKCS1_OAEP.new(private_key)
+        dec_data = cipher_rsa.decrypt(bytes.fromhex(hex_cipher))
+        return dec_data.decode('utf-8')
+    except Exception:
+        return None
+
+
 # --- ROUTES ---
 @app.route("/")
 def index():
@@ -234,6 +296,59 @@ def api_hex_dec():
     res, ms = hex_decode(request.json.get("cipher", ""))
     if res is None: return jsonify({"error": "Invalid hexadecimal format."}), 400
     return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/aes/encrypt", methods=["POST"])
+def api_aes_enc():
+    key = request.json.get("key", "")
+    if not key: return jsonify({"error": "A secret key is required."}), 400
+    res, ms = aes_encrypt(request.json.get("text", ""), key)
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/aes/decrypt", methods=["POST"])
+def api_aes_dec():
+    key = request.json.get("key", "")
+    if not key: return jsonify({"error": "A secret key is required."}), 400
+    res, ms = aes_decrypt(request.json.get("cipher", ""), key)
+    if res is None: return jsonify({"error": "Decryption failed. Incorrect key or manipulated ciphertext."}), 400
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/rsa/generate-keys", methods=["POST"])
+def api_rsa_gen():
+    (priv, pub), ms = rsa_generate_keys()
+    return jsonify({"private_key": priv, "public_key": pub, "time_ms": round(ms, 2)})
+
+@app.route("/rsa/encrypt", methods=["POST"])
+def api_rsa_enc():
+    res, ms = rsa_encrypt(request.json.get("text", ""), request.json.get("public_key", ""))
+    if res is None: return jsonify({"error": "Encryption failed. Invalid Public Key format."}), 400
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/rsa/decrypt", methods=["POST"])
+def api_rsa_dec():
+    res, ms = rsa_decrypt(request.json.get("cipher", ""), request.json.get("private_key", ""))
+    if res is None: return jsonify({"error": "Decryption failed. Invalid Private Key or manipulated ciphertext."}), 400
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/sha256/hash", methods=["POST"])
+def api_sha_hash():
+    text = request.json.get("text", "").encode('utf-8')
+    t0 = time.perf_counter()
+    sha256 = hashlib.sha256(text).hexdigest()
+    md5 = hashlib.md5(text).hexdigest()
+    sha1 = hashlib.sha1(text).hexdigest()
+    ms = (time.perf_counter() - t0) * 1000
+    res = {"sha256": sha256, "md5": md5, "sha1": sha1}
+    return jsonify({"result": res, "time_ms": round(ms, 2)})
+
+@app.route("/sha256/verify", methods=["POST"])
+def api_sha_verify():
+    text = request.json.get("text", "").encode('utf-8')
+    hash_expected = request.json.get("hash", "").strip().lower()
+    t0 = time.perf_counter()
+    actual = hashlib.sha256(text).hexdigest()
+    match = (actual == hash_expected)
+    ms = (time.perf_counter() - t0) * 1000
+    return jsonify({"match": match, "hash": actual, "time_ms": round(ms, 2)})
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

@@ -24,15 +24,25 @@ function clearOutputBox(box) {
   if(timeEl) timeEl.textContent = '';
 }
 
+function showResultRaw(boxId, htmlContent, timeMs) {
+  const box = document.getElementById(boxId);
+  box.innerHTML = htmlContent;
+  box.classList.add('has-result');
+  if (box.nextElementSibling) box.nextElementSibling.textContent = '';
+  if (timeMs !== undefined) {
+    document.getElementById(boxId.replace('out-', 'time-')).textContent = `(⏱ ${timeMs}ms)`;
+  }
+}
+
 function showResult(boxId, text, timeMs) {
   const box = document.getElementById(boxId);
   box.innerHTML = `<span class="output-text">${escapeHtml(text)}</span>`;
   box.classList.add('has-result');
-  box.nextElementSibling.textContent = '';
+  if (box.nextElementSibling) box.nextElementSibling.textContent = '';
   if (timeMs !== undefined) {
     const charCount = text.length;
     const byteCount = new Blob([text]).size;
-    document.getElementById(boxId.replace('out-', 'time-')).textContent = `(${charCount} chars | ${byteCount} bytes | ${timeMs}ms)`;
+    document.getElementById(boxId.replace('out-', 'time-')).textContent = `(${charCount} chars | ${byteCount} bytes | ⏱ ${timeMs}ms)`;
   }
 }
 
@@ -40,8 +50,9 @@ function showError(boxId, msg) {
   const box = document.getElementById(boxId);
   box.innerHTML = '<span class="output-placeholder">Result here…</span>';
   box.classList.remove('has-result');
-  box.nextElementSibling.textContent = '⚠ ' + msg;
-  document.getElementById(boxId.replace('out-', 'time-')).textContent = '';
+  if (box.nextElementSibling) box.nextElementSibling.textContent = '⚠ ' + msg;
+  const timeEl = document.getElementById(boxId.replace('out-', 'time-'));
+  if (timeEl) timeEl.textContent = '';
 }
 
 function escapeHtml(str) {
@@ -51,10 +62,19 @@ function escapeHtml(str) {
 
 async function copyOutput(boxId, btn) {
   const box = document.getElementById(boxId);
-  const textNode = box.querySelector('.output-text');
-  if (!textNode) return;
+  const textContent = box.innerText;
+  if (!textContent || box.querySelector('.output-placeholder')) return;
   try {
-    await navigator.clipboard.writeText(textNode.textContent);
+    await navigator.clipboard.writeText(textContent.replace("Result here…", ""));
+    showCopyFeedback(btn);
+  } catch (err) { }
+}
+
+async function copyInput(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input.value) return;
+  try {
+    await navigator.clipboard.writeText(input.value);
     showCopyFeedback(btn);
   } catch (err) { }
 }
@@ -70,12 +90,13 @@ function showCopyFeedback(btn) {
 }
 
 function updateInputStats(inputId, countId) {
-  const val = document.getElementById(inputId).value;
-  document.getElementById(countId).textContent = `${val.length} chars`;
+  const el = document.getElementById(inputId);
+  if (el) {
+    document.getElementById(countId).textContent = `${el.value.length} chars`;
+  }
 }
 
-
-// ── A1Z26 Cipher Logic ────────────────────
+// ── 1. A1Z26 Cipher Logic ────────────────────
 let a1z26Mode = 'decode';
 function setA1Z26Mode(mode) {
   a1z26Mode = mode;
@@ -97,14 +118,11 @@ function setA1Z26Mode(mode) {
   updateInputStats('input-a1z26', 'count-a1z26');
 }
 
-document.getElementById('input-a1z26').addEventListener('input', () => updateInputStats('input-a1z26', 'count-a1z26'));
-
 async function runA1Z26() {
   const raw = document.getElementById('input-a1z26').value.trim();
   if (!raw) return showError('out-a1z26', 'Please enter something first.');
   const endpoint = a1z26Mode === 'encode' ? '/api/encode' : '/api/decode';
   const body = a1z26Mode === 'encode' ? { text: raw } : { cipher: raw };
-  
   try {
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
@@ -122,6 +140,7 @@ function loadA1Z26Example(text, mode) {
 
 function buildCipherTable() {
   const table = document.getElementById('cipher-table');
+  if(!table) return;
   for (let i = 0; i < 26; i++) {
     const letter = String.fromCharCode(65 + i);
     const num = i + 1;
@@ -143,8 +162,7 @@ function toggleRef() {
   btn.setAttribute('aria-expanded', !body.hidden);
 }
 
-
-// ── CAESAR CIPHER ─────────────────────────
+// ── 2. CAESAR CIPHER ─────────────────────────
 let caesarMode = 'encode';
 function setCaesarMode(mode) {
   caesarMode = mode;
@@ -174,7 +192,6 @@ async function runCaesar() {
   
   const endpoint = caesarMode === 'encode' ? '/caesar/encode' : '/caesar/decode';
   const body = caesarMode === 'encode' ? { text: raw, shift } : { cipher: raw, shift };
-  
   try {
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
@@ -191,8 +208,7 @@ function loadCaesarExample(text, shift, mode) {
   runCaesar();
 }
 
-
-// ── MORSE CODE ────────────────────────────
+// ── 3. MORSE CODE ────────────────────────────
 let morseMode = 'encode';
 function setMorseMode(mode) {
   morseMode = mode;
@@ -218,7 +234,6 @@ async function runMorse() {
   if (!raw) return showError('out-morse', 'Please enter something first.');
   const endpoint = morseMode === 'encode' ? '/morse/encode' : '/morse/decode';
   const body = morseMode === 'encode' ? { text: raw } : { cipher: raw };
-  
   try {
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
@@ -236,13 +251,12 @@ function loadMorseExample(text, mode) {
 
 function toggleMorseRef() {
   const body = document.getElementById('morse-ref-body');
-  const btn = document.getElementById('morse-ref-toggle');
   body.hidden = !body.hidden;
-  btn.setAttribute('aria-expanded', !body.hidden);
 }
 
 function buildMorseTable() {
   const table = document.getElementById('morse-cipher-table');
+  if(!table) return;
   const morseDict = {
     'A':'.-', 'B':'-...', 'C':'-.-.', 'D':'-..', 'E':'.', 'F':'..-.', 'G':'--.', 'H':'....',
     'I':'..', 'J':'.---', 'K':'-.-', 'L':'.-..', 'M':'--', 'N':'-.', 'O':'---', 'P':'.--.',
@@ -263,7 +277,7 @@ function buildMorseTable() {
   }
 }
 
-// ── ROT13 ─────────────────────────────────
+// ── 4. ROT13 ─────────────────────────────────
 async function runRot13() {
   const raw = document.getElementById('input-rot13-text').value.trim();
   if (!raw) return showError('out-rot13', 'Please enter something first.');
@@ -281,8 +295,7 @@ function loadRot13Example(text) {
   runRot13();
 }
 
-
-// ── BINARY ─────────────────────────────────
+// ── 5. BINARY ────────────────────────────────
 let binaryMode = 'encode';
 function setBinaryMode(mode) {
   binaryMode = mode;
@@ -308,7 +321,6 @@ async function runBinary() {
   if (!raw) return showError('out-binary', 'Please enter something first.');
   const endpoint = binaryMode === 'encode' ? '/binary/encode' : '/binary/decode';
   const body = binaryMode === 'encode' ? { text: raw } : { cipher: raw };
-  
   try {
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
@@ -316,7 +328,6 @@ async function runBinary() {
     else showResult('out-binary', data.result, data.time_ms);
   } catch { showError('out-binary', 'Network error.'); }
 }
-
 function loadBinaryExample(text, mode) {
   setBinaryMode(mode);
   document.getElementById('input-binary-text').value = text;
@@ -324,7 +335,7 @@ function loadBinaryExample(text, mode) {
   runBinary();
 }
 
-// ── BASE64 ─────────────────────────────────
+// ── 6. BASE64 ────────────────────────────────
 let base64Mode = 'encode';
 function setBase64Mode(mode) {
   base64Mode = mode;
@@ -332,7 +343,7 @@ function setBase64Mode(mode) {
   document.getElementById('btn-base64-decode').classList.toggle('active', mode === 'decode');
   
   if (mode === 'encode') {
-    document.getElementById('base64-mode-desc').textContent = 'Convert data into Base64 format (padding handled automatically).';
+    document.getElementById('base64-mode-desc').textContent = 'Convert data into Base64 format.';
     document.getElementById('label-base64-input').textContent = 'Your Message';
     document.getElementById('input-base64-text').placeholder = 'Enter message…';
     document.getElementById('label-base64-action').textContent = 'Encode to Base64';
@@ -350,7 +361,6 @@ async function runBase64() {
   if (!raw) return showError('out-base64', 'Please enter something first.');
   const endpoint = base64Mode === 'encode' ? '/base64/encode' : '/base64/decode';
   const body = base64Mode === 'encode' ? { text: raw } : { cipher: raw };
-  
   try {
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
@@ -358,7 +368,6 @@ async function runBase64() {
     else showResult('out-base64', data.result, data.time_ms);
   } catch { showError('out-base64', 'Network error.'); }
 }
-
 function loadBase64Example(text, mode) {
   setBase64Mode(mode);
   document.getElementById('input-base64-text').value = text;
@@ -366,15 +375,15 @@ function loadBase64Example(text, mode) {
   runBase64();
 }
 
-// ── HEXADECIMAL ────────────────────────────
+
+// ── 7. HEXADECIMAL ───────────────────────────
 let hexMode = 'encode';
 function setHexMode(mode) {
   hexMode = mode;
   document.getElementById('btn-hex-encode').classList.toggle('active', mode === 'encode');
   document.getElementById('btn-hex-decode').classList.toggle('active', mode === 'decode');
-  
   if (mode === 'encode') {
-    document.getElementById('hex-mode-desc').textContent = 'Convert plain text bytes into Hexadecimal (base16).';
+    document.getElementById('hex-mode-desc').textContent = 'Convert plain text bytes into Hexadecimal.';
     document.getElementById('label-hex-input').textContent = 'Your Message';
     document.getElementById('input-hex-text').placeholder = 'Enter message…';
     document.getElementById('hex-format-group').style.display = 'flex';
@@ -388,14 +397,12 @@ function setHexMode(mode) {
   }
   clearOutputBox(document.getElementById('out-hex'));
 }
-
 async function runHex() {
   const raw = document.getElementById('input-hex-text').value.trim();
   if (!raw) return showError('out-hex', 'Please enter something first.');
   const endpoint = hexMode === 'encode' ? '/hex/encode' : '/hex/decode';
   const isUpper = document.querySelector('input[name="hex_case"]:checked').value === 'upper';
   const body = hexMode === 'encode' ? { text: raw, upper: isUpper } : { cipher: raw };
-  
   try {
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
@@ -403,7 +410,6 @@ async function runHex() {
     else showResult('out-hex', data.result, data.time_ms);
   } catch { showError('out-hex', 'Network error.'); }
 }
-
 function loadHexExample(text, mode) {
   setHexMode(mode);
   document.getElementById('input-hex-text').value = text;
@@ -411,6 +417,148 @@ function loadHexExample(text, mode) {
   runHex();
 }
 
+// ── 8. AES ───────────────────────────────────
+let aesMode = 'encrypt';
+function setAESMode(mode) {
+  aesMode = mode;
+  document.getElementById('btn-aes-encrypt').classList.toggle('active', mode === 'encrypt');
+  document.getElementById('btn-aes-decrypt').classList.toggle('active', mode === 'decrypt');
+  if (mode === 'encrypt') {
+    document.getElementById('aes-mode-desc').textContent = 'Encrypt a message securely using AES-128 CBC.';
+    document.getElementById('label-aes-input').textContent = 'Message';
+    document.getElementById('input-aes').placeholder = 'Enter message to encrypt...';
+    document.getElementById('label-aes-action').textContent = 'Encrypt Message';
+  } else {
+    document.getElementById('aes-mode-desc').textContent = 'Decrypt a message using your AES secret key.';
+    document.getElementById('label-aes-input').textContent = 'Ciphertext (Hex)';
+    document.getElementById('input-aes').placeholder = 'Enter hex ciphertext...';
+    document.getElementById('label-aes-action').textContent = 'Decrypt Message';
+  }
+  clearOutputBox(document.getElementById('out-aes'));
+}
+async function runAES() {
+  const text = document.getElementById('input-aes').value.trim();
+  const key = document.getElementById('input-aes-key').value;
+  if (!text || !key) return showError('out-aes', 'Message and Key are required.');
+  const endpoint = aesMode === 'encrypt' ? '/aes/encrypt' : '/aes/decrypt';
+  const body = aesMode === 'encrypt' ? { text, key } : { cipher: text, key };
+  try {
+    const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) showError('out-aes', data.error);
+    else showResult('out-aes', data.result, data.time_ms);
+  } catch { showError('out-aes', 'Network error.'); }
+}
+
+// ── 9. RSA ───────────────────────────────────
+let rsaMode = 'encrypt';
+function setRSAMode(mode) {
+  rsaMode = mode;
+  document.getElementById('btn-rsa-encrypt').classList.toggle('active', mode === 'encrypt');
+  document.getElementById('btn-rsa-decrypt').classList.toggle('active', mode === 'decrypt');
+  if (mode === 'encrypt') {
+    document.getElementById('rsa-mode-desc').textContent = 'Encrypt using Public Key, Decrypt using Private Key.';
+    document.getElementById('label-rsa-input').textContent = 'Message';
+    document.getElementById('input-rsa').placeholder = 'Enter message to encrypt...';
+    document.getElementById('label-rsa-action').textContent = 'Encrypt Message';
+  } else {
+    document.getElementById('rsa-mode-desc').textContent = 'Decrypt a message using your Private Key.';
+    document.getElementById('label-rsa-input').textContent = 'Ciphertext (Hex)';
+    document.getElementById('input-rsa').placeholder = 'Enter hex ciphertext...';
+    document.getElementById('label-rsa-action').textContent = 'Decrypt Message';
+  }
+  clearOutputBox(document.getElementById('out-rsa'));
+}
+async function runRSAGenerate() {
+  const btn = document.getElementById('btn-rsa-gen');
+  btn.textContent = 'Generating...';
+  try {
+    const res = await fetch('/rsa/generate-keys', { method: 'POST' });
+    const data = await res.json();
+    document.getElementById('input-rsa-pub').value = data.public_key;
+    document.getElementById('input-rsa-priv').value = data.private_key;
+  } catch { alert('Network error generating keys.'); }
+  btn.textContent = 'Generate 2048-bit RSA Keys';
+}
+async function runRSA() {
+  const text = document.getElementById('input-rsa').value.trim();
+  const pub = document.getElementById('input-rsa-pub').value;
+  const priv = document.getElementById('input-rsa-priv').value;
+  if (!text) return showError('out-rsa', 'Message/Ciphertext required.');
+  let endpoint, body;
+  if (rsaMode === 'encrypt') {
+    if (!pub) return showError('out-rsa', 'Public key required to encrypt.');
+    endpoint = '/rsa/encrypt';
+    body = { text, public_key: pub };
+  } else {
+    if (!priv) return showError('out-rsa', 'Private key required to decrypt.');
+    endpoint = '/rsa/decrypt';
+    body = { cipher: text, private_key: priv };
+  }
+  try {
+    const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (!res.ok) showError('out-rsa', data.error);
+    else showResult('out-rsa', data.result, data.time_ms);
+  } catch { showError('out-rsa', 'Network error.'); }
+}
+
+// ── 10. SHA256 ───────────────────────────────
+let shaMode = 'hash';
+function setSHAMode(mode) {
+  shaMode = mode;
+  document.getElementById('btn-sha-hash').classList.toggle('active', mode === 'hash');
+  document.getElementById('btn-sha-verify').classList.toggle('active', mode === 'verify');
+  if (mode === 'hash') {
+    document.getElementById('sha-mode-desc').textContent = 'Live SHA256, MD5, and SHA1 hashing.';
+    document.getElementById('sha-verify-group').hidden = true;
+    document.getElementById('out-sha').innerHTML = '<span class="output-placeholder">Start typing to generate hashes...</span>';
+  } else {
+    document.getElementById('sha-mode-desc').textContent = 'Verify if a text matches an expected SHA256 hash.';
+    document.getElementById('sha-verify-group').hidden = false;
+    document.getElementById('out-sha').innerHTML = '<span class="output-placeholder">Result here...</span>';
+  }
+}
+async function runSHA() {
+  if (shaMode !== 'hash') return; 
+  const text = document.getElementById('input-sha').value;
+  if (!text) {
+    clearOutputBox(document.getElementById('out-sha'));
+    document.getElementById('out-sha').innerHTML = '<span class="output-placeholder">Start typing to generate hashes...</span>';
+    return;
+  }
+  try {
+    const res = await fetch('/sha256/hash', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({text}) });
+    const data = await res.json();
+    if (!res.ok) showError('out-sha', data.error);
+    else {
+      const html = `
+        <div class="multi-hash-box">
+          <div><div class="hash-label">SHA-256</div><div class="output-text sha-text">${data.result.sha256}</div></div>
+          <div><div class="hash-label">MD5</div><div class="output-text md5-text" style="color:var(--text-3); font-size:0.85rem">${data.result.md5}</div></div>
+          <div><div class="hash-label">SHA-1</div><div class="output-text sha1-text" style="color:var(--text-3); font-size:0.85rem">${data.result.sha1}</div></div>
+        </div>
+      `;
+      showResultRaw('out-sha', html, data.time_ms);
+    }
+  } catch { showError('out-sha', 'Network error.'); }
+}
+async function runSHAVerify() {
+  const text = document.getElementById('input-sha').value;
+  const hashStr = document.getElementById('input-sha-hash').value.trim();
+  if (!text || !hashStr) return showError('out-sha', 'Message and expected hash required.');
+  try {
+    const res = await fetch('/sha256/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({text, hash: hashStr}) });
+    const data = await res.json();
+    if (!res.ok) showError('out-sha', data.error);
+    else {
+      const matchText = data.match ? '✅ MATCH: The hashes are identical.' : '❌ NO MATCH: The hashes are different.';
+      showResult('out-sha', matchText + '\nCalculated:\n' + data.hash, data.time_ms);
+    }
+  } catch { showError('out-sha', 'Network error.'); }
+}
+
+document.getElementById('input-a1z26').addEventListener('input', () => updateInputStats('input-a1z26', 'count-a1z26'));
 
 // Init Everything
 buildCipherTable();
@@ -423,3 +571,6 @@ setMorseMode('encode');
 setBinaryMode('encode');
 setBase64Mode('encode');
 setHexMode('encode');
+setAESMode('encrypt');
+setRSAMode('encrypt');
+setSHAMode('hash');
