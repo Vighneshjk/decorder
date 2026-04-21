@@ -148,170 +148,143 @@ function toggleRef() {
   btn.setAttribute('aria-expanded', !body.hidden);
 }
 
-// ── AES Logic ──────────────────────────────
-let aesMode = 'encrypt';
-function setAESMode(mode) {
-  aesMode = mode;
-  document.getElementById('btn-aes-encrypt').classList.toggle('active', mode === 'encrypt');
-  document.getElementById('btn-aes-decrypt').classList.toggle('active', mode === 'decrypt');
-  if (mode === 'encrypt') {
-    document.getElementById('aes-mode-desc').textContent = 'Encrypt a message securely using AES-128 CBC.';
-    document.getElementById('label-aes-input').textContent = 'Message';
-    document.getElementById('input-aes').placeholder = 'Enter message to encrypt...';
-    document.getElementById('label-aes-action').textContent = 'Encrypt Message';
+// ── CAESAR CIPHER ─────────────────────────
+let caesarMode = 'encode';
+function setCaesarMode(mode) {
+  caesarMode = mode;
+  document.getElementById('btn-caesar-encrypt').classList.toggle('active', mode === 'encode');
+  document.getElementById('btn-caesar-decrypt').classList.toggle('active', mode === 'decode');
+  
+  if (mode === 'encode') {
+    document.getElementById('caesar-mode-desc').textContent = 'Encrypt a message by shifting its letters.';
+    document.getElementById('label-caesar-input').textContent = 'Your Message';
+    document.getElementById('input-caesar-text').placeholder = 'Enter message to encrypt…';
+    document.getElementById('label-caesar-action').textContent = 'Encrypt Message';
   } else {
-    document.getElementById('aes-mode-desc').textContent = 'Decrypt a message using your AES secret key.';
-    document.getElementById('label-aes-input').textContent = 'Ciphertext (Hex)';
-    document.getElementById('input-aes').placeholder = 'Enter hex ciphertext...';
-    document.getElementById('label-aes-action').textContent = 'Decrypt Message';
+    document.getElementById('caesar-mode-desc').textContent = 'Decrypt a message using its shift number.';
+    document.getElementById('label-caesar-input').textContent = 'Encrypted Ciphertext';
+    document.getElementById('input-caesar-text').placeholder = 'Enter encrypted text…';
+    document.getElementById('label-caesar-action').textContent = 'Decrypt Cipher';
   }
-  clearOutputBox(document.getElementById('out-aes'));
+  clearOutputBox(document.getElementById('out-caesar'));
 }
 
-async function runAES() {
-  const text = document.getElementById('input-aes').value.trim();
-  const key = document.getElementById('input-aes-key').value;
-  if (!text || !key) return showError('out-aes', 'Message and Key are required.');
+async function runCaesar() {
+  const raw = document.getElementById('input-caesar-text').value.trim();
+  const shiftText = document.getElementById('input-caesar-shift').value;
+  if (!raw) return showError('out-caesar', 'Please enter something first.');
+  if (shiftText === '') return showError('out-caesar', 'Please provide a shift number.');
+  const shift = parseInt(shiftText, 10);
   
-  const endpoint = aesMode === 'encrypt' ? '/aes/encrypt' : '/aes/decrypt';
-  const body = aesMode === 'encrypt' ? { text, key } : { cipher: text, key };
+  const endpoint = caesarMode === 'encode' ? '/caesar/encode' : '/caesar/decode';
+  const body = caesarMode === 'encode' ? { text: raw, shift } : { cipher: raw, shift };
   
   try {
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
-    if (!res.ok) showError('out-aes', data.error);
-    else showResult('out-aes', data.result, data.time_ms);
-  } catch { showError('out-aes', 'Network error.'); }
+    if (!res.ok) showError('out-caesar', data.error);
+    else showResult('out-caesar', data.result, data.time_ms);
+  } catch { showError('out-caesar', 'Network error.'); }
 }
 
-// ── RSA Logic ──────────────────────────────
-let rsaMode = 'encrypt';
-function setRSAMode(mode) {
-  rsaMode = mode;
-  document.getElementById('btn-rsa-encrypt').classList.toggle('active', mode === 'encrypt');
-  document.getElementById('btn-rsa-decrypt').classList.toggle('active', mode === 'decrypt');
-  if (mode === 'encrypt') {
-    document.getElementById('rsa-mode-desc').textContent = 'Encrypt using Public Key, Decrypt using Private Key.';
-    document.getElementById('label-rsa-input').textContent = 'Message';
-    document.getElementById('input-rsa').placeholder = 'Enter message to encrypt...';
-    document.getElementById('label-rsa-action').textContent = 'Encrypt Message';
-  } else {
-    document.getElementById('rsa-mode-desc').textContent = 'Decrypt a message using your Private Key.';
-    document.getElementById('label-rsa-input').textContent = 'Ciphertext (Hex)';
-    document.getElementById('input-rsa').placeholder = 'Enter hex ciphertext...';
-    document.getElementById('label-rsa-action').textContent = 'Decrypt Message';
-  }
-  clearOutputBox(document.getElementById('out-rsa'));
+function loadCaesarExample(text, shift, mode) {
+  setCaesarMode(mode);
+  document.getElementById('input-caesar-text').value = text;
+  document.getElementById('input-caesar-shift').value = shift;
+  runCaesar();
 }
 
-async function runRSAGenerate() {
-  const btn = document.getElementById('btn-rsa-gen');
-  btn.textContent = 'Generating...';
-  try {
-    const res = await fetch('/rsa/generate-keys', { method: 'POST' });
-    const data = await res.json();
-    document.getElementById('input-rsa-pub').value = data.public_key;
-    document.getElementById('input-rsa-priv').value = data.private_key;
-  } catch { alert('Network error generating keys.'); }
-  btn.textContent = 'Generate New Keys';
-}
 
-async function runRSA() {
-  const text = document.getElementById('input-rsa').value.trim();
-  const pub = document.getElementById('input-rsa-pub').value;
-  const priv = document.getElementById('input-rsa-priv').value;
+// ── MORSE CODE ────────────────────────────
+let morseMode = 'encode';
+function setMorseMode(mode) {
+  morseMode = mode;
+  document.getElementById('btn-morse-encode').classList.toggle('active', mode === 'encode');
+  document.getElementById('btn-morse-decode').classList.toggle('active', mode === 'decode');
   
-  if (!text) return showError('out-rsa', 'Message/Ciphertext required.');
-  
-  let endpoint, body;
-  if (rsaMode === 'encrypt') {
-    if (!pub) return showError('out-rsa', 'Public key required to encrypt.');
-    endpoint = '/rsa/encrypt';
-    body = { text, public_key: pub };
+  if (mode === 'encode') {
+    document.getElementById('morse-mode-desc').textContent = 'Convert plain text into Morse code dots and dashes.';
+    document.getElementById('label-morse-input').textContent = 'Your Message';
+    document.getElementById('input-morse-text').placeholder = 'Enter message… (e.g. HELLO)';
+    document.getElementById('label-morse-action').textContent = 'Convert to Morse';
   } else {
-    if (!priv) return showError('out-rsa', 'Private key required to decrypt.');
-    endpoint = '/rsa/decrypt';
-    body = { cipher: text, private_key: priv };
+    document.getElementById('morse-mode-desc').textContent = 'Decode Morse code back into readable text.';
+    document.getElementById('label-morse-input').textContent = 'Morse Code';
+    document.getElementById('input-morse-text').placeholder = 'Enter Morse code… (e.g. .... . .-.. .-.. ---)';
+    document.getElementById('label-morse-action').textContent = 'Decode to Text';
   }
+  clearOutputBox(document.getElementById('out-morse'));
+}
+
+async function runMorse() {
+  const raw = document.getElementById('input-morse-text').value.trim();
+  if (!raw) return showError('out-morse', 'Please enter something first.');
+  const endpoint = morseMode === 'encode' ? '/morse/encode' : '/morse/decode';
+  const body = morseMode === 'encode' ? { text: raw } : { cipher: raw };
   
   try {
     const res = await fetch(endpoint, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
     const data = await res.json();
-    if (!res.ok) showError('out-rsa', data.error);
-    else showResult('out-rsa', data.result, data.time_ms);
-  } catch { showError('out-rsa', 'Network error.'); }
+    if (!res.ok) showError('out-morse', data.error);
+    else showResult('out-morse', data.result, data.time_ms);
+  } catch { showError('out-morse', 'Network error.'); }
 }
 
-// ── SHA256 Logic ───────────────────────────
-let shaMode = 'hash';
-function setSHAMode(mode) {
-  shaMode = mode;
-  document.getElementById('btn-sha-hash').classList.toggle('active', mode === 'hash');
-  document.getElementById('btn-sha-verify').classList.toggle('active', mode === 'verify');
-  if (mode === 'hash') {
-    document.getElementById('sha-mode-desc').textContent = 'Generate a one-way SHA256 hash of your text.';
-    document.getElementById('sha-verify-group').hidden = true;
-    document.getElementById('label-sha-action').textContent = 'Generate Hash';
-  } else {
-    document.getElementById('sha-mode-desc').textContent = 'Verify if a text matches an expected SHA256 hash.';
-    document.getElementById('sha-verify-group').hidden = false;
-    document.getElementById('label-sha-action').textContent = 'Verify Hash';
-  }
-  clearOutputBox(document.getElementById('out-sha'));
+function loadMorseExample(text, mode) {
+  setMorseMode(mode);
+  document.getElementById('input-morse-text').value = text;
+  runMorse();
 }
 
-async function runSHA() {
-  const text = document.getElementById('input-sha').value;
-  const hashStr = document.getElementById('input-sha-hash').value.trim();
-  
-  if (shaMode === 'hash') {
-    if (!text) return showError('out-sha', 'Message required.');
-    try {
-      const res = await fetch('/sha256/hash', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({text}) });
-      const data = await res.json();
-      if (!res.ok) showError('out-sha', data.error);
-      else showResult('out-sha', data.result, data.time_ms);
-    } catch { showError('out-sha', 'Network error.'); }
-  } else {
-    if (!text || !hashStr) return showError('out-sha', 'Message and hash required.');
-    try {
-      const res = await fetch('/sha256/verify', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({text, hash: hashStr}) });
-      const data = await res.json();
-      if (!res.ok) showError('out-sha', data.error);
-      else showResult('out-sha', data.match ? '✅ MATCH: The hashes are identical.' : '❌ NO MATCH: The hashes are different.', data.time_ms);
-    } catch { showError('out-sha', 'Network error.'); }
+function toggleMorseRef() {
+  const body = document.getElementById('morse-ref-body');
+  const btn = document.getElementById('morse-ref-toggle');
+  body.hidden = !body.hidden;
+  btn.setAttribute('aria-expanded', !body.hidden);
+}
+
+function buildMorseTable() {
+  const table = document.getElementById('morse-cipher-table');
+  const morseDict = {
+    'A':'.-', 'B':'-...', 'C':'-.-.', 'D':'-..', 'E':'.', 'F':'..-.', 'G':'--.', 'H':'....',
+    'I':'..', 'J':'.---', 'K':'-.-', 'L':'.-..', 'M':'--', 'N':'-.', 'O':'---', 'P':'.--.',
+    'Q':'--.-', 'R':'.-.', 'S':'...', 'T':'-', 'U':'..-', 'V':'...-', 'W':'.--', 'X':'-..-',
+    'Y':'-.--', 'Z':'--..', '1':'.----', '2':'..---', '3':'...--', '4':'....-', '5':'.....',
+    '6':'-....', '7':'--...', '8':'---..', '9':'----.', '0':'-----'
+  };
+  for (const [letter, num] of Object.entries(morseDict)) {
+    const cell = document.createElement('div');
+    cell.className = 'cipher-cell';
+    cell.innerHTML = `<span class="cell-letter">${letter}</span><span class="cell-sep" style="visibility:hidden;height:1px">=</span><span class="cell-num" style="font-size:1rem;font-weight:700">${num}</span>`;
+    cell.addEventListener('click', () => {
+      const inp = document.getElementById('input-morse-text');
+      inp.value += morseMode === 'encode' ? letter : (inp.value ? ` ${num}` : `${num}`);
+    });
+    table.appendChild(cell);
   }
 }
+
+// ── ROT13 ─────────────────────────────────
+async function runRot13() {
+  const raw = document.getElementById('input-rot13-text').value.trim();
+  if (!raw) return showError('out-rot13', 'Please enter something first.');
+  try {
+    const res = await fetch('/rot13/convert', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({text: raw}) });
+    const data = await res.json();
+    if (!res.ok) showError('out-rot13', data.error);
+    else showResult('out-rot13', data.result, data.time_ms);
+  } catch { showError('out-rot13', 'Network error.'); }
+}
+
+function loadRot13Example(text) {
+  document.getElementById('input-rot13-text').value = text;
+  runRot13();
+}
+
 
 // Init
 buildCipherTable();
 setA1Z26Mode('decode');
-
-// ── Dynamic Example Loaders ────────────────
-
-function loadAESExample(text, key, mode) {
-  setAESMode(mode);
-  document.getElementById('input-aes').value = text;
-  document.getElementById('input-aes-key').value = key;
-  runAES();
-}
-
-async function loadRSAExample() {
-  setRSAMode('encrypt');
-  document.getElementById('input-rsa').value = "SECRET MESSAGE";
-  await runRSAGenerate();
-  setTimeout(runRSA, 200); // Give it a tiny delay
-}
-
-function loadSHAExample(text, mode) {
-  setSHAMode(mode);
-  document.getElementById('input-sha').value = text;
-  runSHA();
-}
-
-function loadSHAVerifyExample(text, hash) {
-  setSHAMode('verify');
-  document.getElementById('input-sha').value = text;
-  document.getElementById('input-sha-hash').value = hash;
-  runSHA();
-}
+setCaesarMode('encode');
+setMorseMode('encode');
+buildMorseTable();

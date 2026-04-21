@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>CipherX — Security Suite</title>
-  <meta name="description" content="Cipher and encryption tools including A1Z26, AES, RSA, and SHA256." />
+  <meta name="description" content="Cipher and encryption tools including A1Z26, Caesar, Morse, and ROT13." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -30,10 +30,10 @@
 
     <!-- ── Tabs Navigation ── -->
     <nav class="nav-tabs" role="tablist">
-      <button class="nav-tab active" id="tab-btn-a1z26" onclick="switchTab('a1z26')" role="tab" aria-selected="true">A1Z26 Cipher</button>
-      <button class="nav-tab" id="tab-btn-aes" onclick="switchTab('aes')" role="tab" aria-selected="false">AES</button>
-      <button class="nav-tab" id="tab-btn-rsa" onclick="switchTab('rsa')" role="tab" aria-selected="false">RSA</button>
-      <button class="nav-tab" id="tab-btn-sha256" onclick="switchTab('sha256')" role="tab" aria-selected="false">SHA256</button>
+      <button class="nav-tab active" id="tab-btn-a1z26" onclick="switchTab('a1z26')" role="tab" aria-selected="true">A1Z26</button>
+      <button class="nav-tab" id="tab-btn-caesar" onclick="switchTab('caesar')" role="tab" aria-selected="false">Caesar</button>
+      <button class="nav-tab" id="tab-btn-morse" onclick="switchTab('morse')" role="tab" aria-selected="false">Morse</button>
+      <button class="nav-tab" id="tab-btn-rot13" onclick="switchTab('rot13')" role="tab" aria-selected="false">ROT13</button>
     </nav>
 
     <!-- ── TAB: A1Z26 ── -->
@@ -82,152 +82,148 @@
       <section class="examples-section">
         <h2 class="section-title">Quick Examples</h2>
         <div class="examples-grid">
-          <div class="example-card" onclick="loadA1Z26Example('HELLO WORLD','encode')"><span class="ex-label">HELLO WORLD</span><span class="ex-arrow">→</span><span class="ex-value mono">8-5-12-12-15 / 23-15-18-12-4</span></div>
-          <div class="example-card" onclick="loadA1Z26Example('8-5-12-12-15 / 23-15-18-12-4','decode')"><span class="ex-value mono">8-5-12-12-15 / 23-15-18-12-4</span><span class="ex-arrow">→</span><span class="ex-label">HELLO WORLD</span></div>
+          <div class="example-card" onclick="loadA1Z26Example('HELLO WORLD','encode')"><span class="ex-label">HELLO WORLD</span><span class="ex-arrow">→</span><span class="ex-value mono">8-5-12-12-15</span></div>
+          <div class="example-card" onclick="loadA1Z26Example('8-5-12-12-15 / 23-15-18-12-4','decode')"><span class="ex-value mono">8-5...</span><span class="ex-arrow">→</span><span class="ex-label">Decode</span></div>
         </div>
       </section>
     </div>
 
-    <!-- ── TAB: AES ── -->
-    <div id="tab-content-aes" class="tab-pane" role="tabpanel" hidden>
+    <!-- ── TAB: CAESAR ── -->
+    <div id="tab-content-caesar" class="tab-pane" role="tabpanel" hidden>
       <main class="main-card">
         <div class="mode-toggle" role="group">
-          <button id="btn-aes-encrypt" class="mode-btn active" onclick="setAESMode('encrypt')">Encrypt</button>
-          <button id="btn-aes-decrypt" class="mode-btn" onclick="setAESMode('decrypt')">Decrypt</button>
+          <button id="btn-caesar-encrypt" class="mode-btn active" onclick="setCaesarMode('encode')">Encrypt</button>
+          <button id="btn-caesar-decrypt" class="mode-btn" onclick="setCaesarMode('decode')">Decrypt</button>
         </div>
-        <p class="mode-desc" id="aes-mode-desc">Encrypt a message securely using AES-128 CBC.</p>
+        <p class="mode-desc" id="caesar-mode-desc">Encrypt a message by shifting its letters.</p>
         
         <div class="field-group">
-          <label for="input-aes" id="label-aes-input" class="field-label">Message</label>
+          <label for="input-caesar-text" id="label-caesar-input" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-aes" class="input-area" placeholder="Enter message to encrypt…" rows="3"></textarea>
+            <textarea id="input-caesar-text" class="input-area" placeholder="Enter message to encrypt…" rows="3"></textarea>
           </div>
         </div>
         
         <div class="field-group">
-          <label for="input-aes-key" class="field-label">Secret Key</label>
-          <input type="text" id="input-aes-key" class="input-area single-line" placeholder="Enter your secret key…" />
+          <label for="input-caesar-shift" class="field-label">Shift Length (1-25)</label>
+          <input type="number" id="input-caesar-shift" class="input-area single-line" placeholder="3" min="1" max="25" />
         </div>
         
-        <button id="btn-aes-action" class="convert-btn" onclick="runAES()">
-          <span id="label-aes-action">Encrypt Message</span>
+        <button id="btn-caesar-action" class="convert-btn" onclick="runCaesar()">
+          <span id="label-caesar-action">Encrypt Message</span>
         </button>
 
         <div class="output-section">
           <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-aes"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-aes', this)">Copy</button>
+            <label class="field-label">Result <span class="time-ms" id="time-caesar"></span></label>
+            <button class="copy-btn" onclick="copyOutput('out-caesar', this)">Copy</button>
           </div>
-          <div class="output-box" id="out-aes"><span class="output-placeholder">Result here…</span></div>
-          <div id="err-aes" class="error-msg"></div>
+          <div class="output-box" id="out-caesar"><span class="output-placeholder">Result here…</span></div>
+          <div id="err-caesar" class="error-msg"></div>
         </div>
       </main>
 
       <section class="examples-section">
         <h2 class="section-title">Quick Examples</h2>
         <div class="examples-grid">
-          <div class="example-card" onclick="loadAESExample('ATTACK AT DAWN', 'secret_pass_123', 'encrypt')">
-            <span class="ex-label">Encrypt "ATTACK AT DAWN"</span><span class="ex-arrow">→</span><span class="ex-value mono">Key: secret123</span>
+          <div class="example-card" onclick="loadCaesarExample('HELLO', 3, 'encode')">
+            <span class="ex-label">HELLO (+3)</span><span class="ex-arrow">→</span><span class="ex-value mono">KHOOR</span>
+          </div>
+          <div class="example-card" onclick="loadCaesarExample('KHOOR', 3, 'decode')">
+            <span class="ex-label">KHOOR (-3)</span><span class="ex-arrow">→</span><span class="ex-value mono">HELLO</span>
           </div>
         </div>
       </section>
     </div>
 
-    <!-- ── TAB: RSA ── -->
-    <div id="tab-content-rsa" class="tab-pane" role="tabpanel" hidden>
+    <!-- ── TAB: MORSE ── -->
+    <div id="tab-content-morse" class="tab-pane" role="tabpanel" hidden>
       <main class="main-card">
         <div class="mode-toggle" role="group">
-          <button id="btn-rsa-encrypt" class="mode-btn active" onclick="setRSAMode('encrypt')">Encrypt</button>
-          <button id="btn-rsa-decrypt" class="mode-btn" onclick="setRSAMode('decrypt')">Decrypt</button>
+          <button id="btn-morse-encode" class="mode-btn active" onclick="setMorseMode('encode')">Translate directly to Morse</button>
+          <button id="btn-morse-decode" class="mode-btn" onclick="setMorseMode('decode')">Decode back to Text</button>
         </div>
-        <p class="mode-desc" id="rsa-mode-desc">Encrypt using Public Key, Decrypt using Private Key.</p>
-        
-        <div class="keys-section">
-          <button class="convert-btn outline" onclick="runRSAGenerate()" id="btn-rsa-gen">Generate New Keys</button>
-          <div class="key-box">
-             <label class="field-label split-label">Public Key (share this) <button class="copy-btn mini" onclick="copyInput('input-rsa-pub', this)">Copy</button></label>
-             <textarea id="input-rsa-pub" class="input-area key-area" placeholder="Public Key..." rows="2"></textarea>
-          </div>
-          <div class="key-box">
-             <label class="field-label split-label">Private Key (keep secret) <button class="copy-btn mini" onclick="copyInput('input-rsa-priv', this)">Copy</button></label>
-             <textarea id="input-rsa-priv" class="input-area key-area" placeholder="Private Key..." rows="2"></textarea>
-          </div>
-        </div>
-        
-        <div class="field-group mt-3">
-          <label for="input-rsa" id="label-rsa-input" class="field-label">Message</label>
-          <div class="textarea-wrapper">
-            <textarea id="input-rsa" class="input-area" placeholder="Enter message to encrypt…" rows="3"></textarea>
-          </div>
-        </div>
-        
-        <button id="btn-rsa-action" class="convert-btn" onclick="runRSA()">
-          <span id="label-rsa-action">Encrypt Message</span>
-        </button>
-
-        <div class="output-section">
-          <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-rsa"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-rsa', this)">Copy</button>
-          </div>
-          <div class="output-box" id="out-rsa"><span class="output-placeholder">Result here…</span></div>
-          <div id="err-rsa" class="error-msg"></div>
-        </div>
-      </main>
-
-      <section class="examples-section">
-        <h2 class="section-title">Quick Examples</h2>
-        <div class="examples-grid">
-          <div class="example-card" onclick="loadRSAExample()">
-            <span class="ex-label">1. Generate Keys & Encrypt</span><span class="ex-arrow">→</span><span class="ex-value mono">RSA Flow</span>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- ── TAB: SHA256 ── -->
-    <div id="tab-content-sha256" class="tab-pane" role="tabpanel" hidden>
-      <main class="main-card">
-        <div class="mode-toggle" role="group">
-          <button id="btn-sha-hash" class="mode-btn active" onclick="setSHAMode('hash')">Hash</button>
-          <button id="btn-sha-verify" class="mode-btn" onclick="setSHAMode('verify')">Verify</button>
-        </div>
-        <p class="mode-desc" id="sha-mode-desc">Generate a one-way SHA256 hash of your text.</p>
+        <p class="mode-desc" id="morse-mode-desc">Convert plain text into Morse code dots and dashes.</p>
         
         <div class="field-group">
-          <label for="input-sha" class="field-label">Input Text</label>
+          <label for="input-morse-text" id="label-morse-input" class="field-label">Message</label>
           <div class="textarea-wrapper">
-            <textarea id="input-sha" class="input-area" placeholder="Enter text to hash…" rows="3"></textarea>
+            <textarea id="input-morse-text" class="input-area" placeholder="Enter message…" rows="3"></textarea>
           </div>
         </div>
         
-        <div class="field-group" id="sha-verify-group" hidden>
-          <label for="input-sha-hash" class="field-label">Expected Hash</label>
-          <input type="text" id="input-sha-hash" class="input-area single-line" placeholder="Enter expected SHA256 hash…" />
-        </div>
-        
-        <button id="btn-sha-action" class="convert-btn" onclick="runSHA()">
-          <span id="label-sha-action">Generate Hash</span>
+        <button id="btn-morse-action" class="convert-btn" onclick="runMorse()">
+          <span id="label-morse-action">Convert Message</span>
         </button>
 
         <div class="output-section">
           <div class="output-header">
-            <label class="field-label">Result <span class="time-ms" id="time-sha"></span></label>
-            <button class="copy-btn" onclick="copyOutput('out-sha', this)">Copy</button>
+            <label class="field-label">Result <span class="time-ms" id="time-morse"></span></label>
+            <button class="copy-btn" onclick="copyOutput('out-morse', this)">Copy</button>
           </div>
-          <div class="output-box" id="out-sha"><span class="output-placeholder">Result here…</span></div>
-          <div id="err-sha" class="error-msg"></div>
+          <div class="output-box" id="out-morse"><span class="output-placeholder">Result here…</span></div>
+          <div id="err-morse" class="error-msg"></div>
+        </div>
+        
+        <div class="ref-toggle-row">
+          <button class="ref-toggle-btn" id="morse-ref-toggle" onclick="toggleMorseRef()" aria-expanded="false">
+            <svg class="title-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+            Morse Reference Table
+            <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+        <div id="morse-ref-body" class="ref-body" hidden>
+          <div class="cipher-table" id="morse-cipher-table"></div>
         </div>
       </main>
 
       <section class="examples-section">
         <h2 class="section-title">Quick Examples</h2>
         <div class="examples-grid">
-          <div class="example-card" onclick="loadSHAExample('admin', 'hash')">
-            <span class="ex-label">Hash "admin"</span><span class="ex-arrow">→</span><span class="ex-value mono">8c6976e5b5...</span>
+          <div class="example-card" onclick="loadMorseExample('HELLO', 'encode')">
+            <span class="ex-label">HELLO</span><span class="ex-arrow">→</span><span class="ex-value mono">.... . .-.. .-.. ---</span>
           </div>
-          <div class="example-card" onclick="loadSHAVerifyExample('admin', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918')">
-            <span class="ex-value mono">8c69...</span><span class="ex-arrow">→</span><span class="ex-label">Verify Match</span>
+          <div class="example-card" onclick="loadMorseExample('.... . .-.. .-.. --- / .-- --- .-. .-.. -..', 'decode')">
+            <span class="ex-value mono">.... . .-..</span><span class="ex-arrow">→</span><span class="ex-label">HELLO WORLD</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ── TAB: ROT13 ── -->
+    <div id="tab-content-rot13" class="tab-pane" role="tabpanel" hidden>
+      <main class="main-card">
+        <p class="mode-desc" style="text-align: center; margin-top: 1rem; margin-bottom: 2rem;">ROT13 shifts each letter by exactly 13 places. It reverses itself!</p>
+        
+        <div class="field-group">
+          <label for="input-rot13-text" class="field-label">Message</label>
+          <div class="textarea-wrapper">
+            <textarea id="input-rot13-text" class="input-area" placeholder="Enter message…" rows="3"></textarea>
+          </div>
+        </div>
+        
+        <button id="btn-rot13-action" class="convert-btn" onclick="runRot13()">
+          <span id="label-rot13-action">Convert Message (Shift 13)</span>
+        </button>
+
+        <div class="output-section">
+          <div class="output-header">
+            <label class="field-label">Result <span class="time-ms" id="time-rot13"></span></label>
+            <button class="copy-btn" onclick="copyOutput('out-rot13', this)">Copy</button>
+          </div>
+          <div class="output-box" id="out-rot13"><span class="output-placeholder">Result here…</span></div>
+          <div id="err-rot13" class="error-msg"></div>
+        </div>
+      </main>
+
+      <section class="examples-section">
+        <h2 class="section-title">Quick Examples</h2>
+        <div class="examples-grid">
+          <div class="example-card" onclick="loadRot13Example('HELLO')">
+            <span class="ex-label">HELLO</span><span class="ex-arrow">→</span><span class="ex-value mono">URYYB</span>
+          </div>
+          <div class="example-card" onclick="loadRot13Example('URYYB')">
+            <span class="ex-value mono">URYYB</span><span class="ex-arrow">→</span><span class="ex-label">HELLO</span>
           </div>
         </div>
       </section>
